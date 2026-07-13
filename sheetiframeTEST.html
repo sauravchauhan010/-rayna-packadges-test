@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rayna Tours — Premium Group Departures</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght=0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght=300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0a1628;
+      --navy-mid: #132040;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --cream: #faf8f4;
+      --slate-soft: #f1f0ed;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--cream);
+      color: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden; /* Prevent horizontal scrollbars on fluid expansions */
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+    }
+
+    h1, h2, h3, .serif { font-family: 'Cormorant Garamond', serif; }
+
+    /* Spinner animation */
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(201,168,76,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Card hover interactions */
+    .pkg-card { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease; }
+    .pkg-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(10,22,40,0.08); }
+
+    .pkg-card img { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    .pkg-card:hover img { transform: scale(1.04); }
+
+    /* Overlay backdrop and modals */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(10,22,40,0.6);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-box { animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Input Fields styling */
+    .field {
+      width: 100%;
+      background: #fff;
+      border: 1px solid #ddd8ce;
+      border-radius: 6px;
+      padding: 9px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--navy);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12); }
+
+    /* Core premium buttons */
+    .btn-gold {
+      background: var(--gold);
+      color: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-gold:hover { background: var(--gold-light); transform: translateY(-0.5px); }
+    .btn-gold:active { transform: translateY(0); }
+
+    /* WhatsApp custom branding */
+    .btn-whatsapp {
+      background: #25D366;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-whatsapp:hover { background: #20ba5a; transform: translateY(-0.5px); }
+    .btn-whatsapp:active { transform: translateY(0); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 9px 16px;
+      border-radius: 6px;
+      border: 1px solid #ddd8ce;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-outline:hover { background: var(--slate-soft); border-color: #c0b9ad; }
+
+    .btn-danger {
+      background: transparent;
+      color: #b91c1c;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #fecaca;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-danger:hover { background: #fff1f2; }
+
+    .btn-edit {
+      background: transparent;
+      color: var(--navy);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd8ce;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-edit:hover { background: var(--slate-soft); }
+
+    /* Directory Tables */
+    table { border-collapse: collapse; width: 100%; }
+    th { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #888; padding: 12px 14px; background: var(--slate-soft); }
+    td { padding: 12px 14px; border-top: 1px solid #ede9e1; font-size: 13px; }
+
+    .field-label {
+      display: block; font-size: 9px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase; color: #888;
+      margin-bottom: 4px;
+    }
+
+    /* Hero Background visual layers */
+    .hero-bg {
+      background-image: linear-gradient(180deg, rgba(10,22,40,0.92) 0%, rgba(10,22,40,0.97) 100%), url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1600&q=80');
+      background-size: cover; background-position: center;
+    }
+
+    /* Scrollbar style */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--cream); }
+    ::-webkit-scrollbar-thumb { background: #c0b9ad; border-radius: 3px; }
+
+    .error-box { background: #fff1f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 500; }
+    .success-box { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 6px; padding: 8px 12px; font-size: 12px; font-weight: 500; }
+
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse 1.8s infinite; display: inline-block; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .img-wrap { position: relative; overflow: hidden; aspect-ratio: 16/10; background: #e8e4dc; }
+
+    .highlight-strip {
+      position: absolute; bottom: 8px; left: 8px;
+      background: rgba(10, 22, 40, 0.85);
+      backdrop-filter: blur(4px);
+      color: var(--gold);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 4px;
+    }
+
+    .admin-bar {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+      color: #fff;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .editing-row { background: #fffbf0; }
+    /* ── File Preview Modal ── */
+    .file-modal-overlay {
+      position: fixed; inset: 0; background: rgba(10,22,40,0.7);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
+      padding: 20px; backdrop-filter: blur(3px);
+      animation: fadeIn 0.15s ease;
+    }
+    .file-modal {
+      background: #fff; border-radius: 10px; width: calc(100vw - 32px); max-width: calc(100vw - 32px);
+      height: calc(100vh - 32px); max-height: calc(100vh - 32px);
+      display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(10,22,40,0.3);
+      animation: slideUp 0.2s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden;
+    }
+    .file-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid #ede9e1;
+      background: var(--slate-soft); flex-shrink: 0;
+    }
+    .file-modal-body { flex: 1; overflow: auto; min-height: 0; }
+    .file-modal-body iframe {
+      width: 100%; height: 100%; min-height: 70vh;
+      border: none; display: block;
+    }
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ── Hotel View Styles ── */
+    .view-toggle {
+      display: flex;
+      background: var(--slate-soft);
+      border: 1px solid #ede9e1;
+      border-radius: 30px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .view-toggle-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      background: transparent;
+      color: rgba(10,22,40,0.5);
+    }
+    .view-toggle-btn.active {
+      background: var(--navy);
+      color: var(--gold);
+      box-shadow: 0 2px 6px rgba(10,22,40,0.15);
+    }
+    .hotel-table-wrap { overflow-x: auto; width: 100%; }
+    .hotel-table { width: 100%; border-collapse: collapse; }
+    .hotel-table th {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #888;
+      padding: 12px 16px; background: var(--slate-soft);
+      text-align: left; white-space: nowrap;
+    }
+    .hotel-table td {
+      padding: 12px 16px; border-top: 1px solid #ede9e1;
+      font-size: 13px; vertical-align: middle;
+    }
+    .hotel-table tr:hover td { background: #fdfcfa; }
+    .hotel-star { color: var(--gold); font-size: 11px; }
+    .file-row:hover { background: #fdfcfa !important; }
+    .file-row:last-child { border-bottom: none; }
+
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+    <div class="spinner"></div>
+    <p style="font-size:13px;color:#888;font-weight:500;letter-spacing:0.05em;">Loading Rayna Tours…</p>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // ─── INITIAL HOISTING FOR ROBUST LOAD ──────────────────────────────────────
+  var isFirebaseReady = false;
+  var app = null;
+  var auth = null;
+  var db = null;
+  
+  // Reverted default APP_ID back to 'smc-tours-portal-v2' so legacy cloud entries are loaded
+  var APP_ID = 'smc-tours-portal-v2';
+
+  // ─── CONFIG ────────────────────────────────────────────────────────────────
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDLIMISKaknbAIqwHrbk8xIbMjETktlzwU",
+    authDomain: "packadge-itenary.firebaseapp.com",
+    projectId: "packadge-itenary",
+    storageBucket: "packadge-itenary.firebasestorage.app",
+    messagingSenderId: "482476048193",
+    appId: "1:482476048193:web:4164c8c466c5e856b96bc0"
+  };
+
+  // Robust environment check for injected APP ID
+  if (typeof __app_id !== 'undefined' && __app_id) {
+    APP_ID = __app_id;
+  } else if (typeof window.__app_id !== 'undefined' && window.__app_id) {
+    APP_ID = window.__app_id;
+  }
+
+  // Robust environment check for injected Firebase configuration
+  let firebaseConfig = FIREBASE_CONFIG;
+  if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+    try {
+      firebaseConfig = JSON.parse(__firebase_config);
+    } catch (e) {
+      console.error("Error parsing injected global __firebase_config:", e);
+    }
+  } else if (typeof window.__firebase_config !== 'undefined' && window.__firebase_config) {
+    try {
+      firebaseConfig = JSON.parse(window.__firebase_config);
+    } catch (e) {
+      console.error("Error parsing injected window.__firebase_config:", e);
+    }
+  }
+
+  isFirebaseReady = !!(firebaseConfig && firebaseConfig.apiKey);
+
+  const SEED_PACKAGES = [
+    {
+      id: 'seed-1',
+      title: 'Switzerland',
+      duration: '3 Nights / 4 Days',
+      highlight: 'Zurich 3N',
+      image: 'https://images.unsplash.com/photo-1538370965046-79c0d6907d47?auto=format&fit=crop&w=800&q=80',
+      pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'seed-2',
+      title: 'France',
+      duration: '4 Nights / 5 Days',
+      highlight: 'Paris 4N',
+      image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80',
+      pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'seed-3',
+      title: 'United Kingdom',
+      duration: '5 Nights / 6 Days',
+      highlight: 'London 5N',
+      image: 'https://images.unsplash.com/photo-1513635269975-59663e0ca1ad?auto=format&fit=crop&w=800&q=80',
+      pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'seed-4',
+      title: 'Italy',
+      duration: '5 Nights / 6 Days',
+      highlight: 'Rome 3N + Florence 2N',
+      image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80',
+      pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+      createdAt: new Date().toISOString()
+    }
+  ];
+
+  if (isFirebaseReady) {
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch (err) {
+      console.error('Firebase initialization error:', err);
+    }
+  }
+
+  // ─── STATE ─────────────────────────────────────────────────────────────────
+  const state = {
+    view: 'customer',
+    isLoggedIn: sessionStorage.getItem('rayna_admin_auth') === 'true',
+    user: null,
+    packages: [],
+    isDbLoading: true,
+    searchQuery: '',
+    adminSearchQuery: '',
+    selectedCountryFilter: 'All',
+    loginError: '',
+    loginLoading: false,
+    formError: '',
+    formSuccess: '',
+    editingId: null,
+    draft: { title: '', duration: '', highlight: '', image: '', pdfUrl: '' },
+    // ── Unified delete confirmation: { type: 'package' | 'agent', id } or null ──
+    deleteTarget: null,
+    // ── Hotel view ──
+    activeView: sessionStorage.getItem('rayna_view') || 'packages',   // 'packages' | 'hotels'
+    folderSearch: '',        // search query for agent file list
+    hotelSearch: '',         // search query for hotel sheet
+    // ── Agent (AGT code) login ──
+    agents: [],                                            // [{id, agtCode, password, createdAt}] from Firestore
+    agentsLoaded: false,
+    agentUnlocked: sessionStorage.getItem('rayna_agent') || '',  // holds the logged-in AGT code, '' if locked
+    agentLoginError: '',
+    agentLoginLoading: false,
+    showAgentLoginForm: false,
+    folderSheets: [],       // list of {id, name, mimeType, webViewLink} from Drive folder
+    folderLoading: false,
+    folderFetched: false,
+    folderError: '',
+    activeSheetId: null,    // currently selected promo sheet id
+    activeSheetName: '',
+    // ── Admin: Access List (agents) management ──
+    adminSection: sessionStorage.getItem('rayna_admin_section') || 'packages', // 'packages' | 'agents'
+    agentSearchQuery: '',
+    agentFormError: '',
+    agentFormSuccess: '',
+    editingAgentId: null,
+    agentDraft: { agtCode: '', password: '' },
+    revealedAgentIds: [],   // agent ids whose password is currently shown in plaintext in the admin table
+    // ── File preview modal ──
+    previewFile: null,      // {id, name, mimeType} or null
+    previewZoom: 100,        // zoom % for modal
+    previewOpenedAt: 0,      // timestamp set when a preview is opened, used to bust Drive's cache
+  };
+
+  // ─── ROUTING ───────────────────────────────────────────────────────────────
+  function getView() {
+    const p = new URLSearchParams(window.location.search);
+    if (p.has('admin')) return state.isLoggedIn ? 'admin' : 'admin-login';
+    return 'customer';
+  }
+
+  // ─── AUTH ──────────────────────────────────────────────────────────────────
+  async function initAuth() {
+    if (!isFirebaseReady || !auth) {
+      state.user = { uid: 'local-user' };
+      return;
+    }
+    try {
+      // Robust detection of injected authentication token
+      const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : (typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null);
+      if (token) {
+        await signInWithCustomToken(auth, token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    } catch (err) {
+      console.warn('Authentication failed. Falling back to local offline sandbox directory.', err);
+    }
+  }
+
+  // ─── LOCAL STORAGE FALLBACK ENGINE ─────────────────────────────────────────
+  function loadLocalFallback() {
+    try {
+      const localPkgs = localStorage.getItem('rayna_pkgs_v4');
+      state.packages = localPkgs ? JSON.parse(localPkgs) : [...SEED_PACKAGES];
+      if (!localPkgs) localStorage.setItem('rayna_pkgs_v4', JSON.stringify(state.packages));
+    } catch(_) {
+      state.packages = [...SEED_PACKAGES];
+    }
+    try {
+      const localAgents = localStorage.getItem('rayna_agents_v1');
+      state.agents = localAgents ? JSON.parse(localAgents) : [];
+    } catch(_) {
+      state.agents = [];
+    }
+    state.agentsLoaded = true;
+    state.isDbLoading = false;
+    render();
+  }
+
+  // ─── DATABASE ──────────────────────────────────────────────────────────────
+  function setupListeners() {
+    if (!isFirebaseReady || !db) {
+      loadLocalFallback();
+      return;
+    }
+
+    onAuthStateChanged(auth, (usr) => {
+      state.user = usr;
+      if (!usr) {
+        if (state.isDbLoading) {
+          loadLocalFallback();
+        }
+        return;
+      }
+
+      // Query mapped strictly to artifacts -> APP_ID (smc-tours-portal-v2) -> public -> data -> packages
+      const pkgsCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'packages');
+      onSnapshot(pkgsCol, async (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+
+        if (list.length === 0 && state.isDbLoading) {
+          try {
+            for (const item of SEED_PACKAGES) {
+              const { id: _id, ...data } = item;
+              await addDoc(pkgsCol, data);
+            }
+          } catch (err) { console.error('Seed error:', err); }
+        } else {
+          list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          state.packages = list;
+          state.isDbLoading = false;
+          render();
+        }
+      }, err => { 
+        console.error('Packages listener error:', err); 
+        loadLocalFallback();
+      });
+
+      // Access List (agents / AGT codes) — synced live so admin edits apply everywhere instantly
+      const agentsCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'agents');
+      onSnapshot(agentsCol, (snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        list.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        state.agents = list;
+        state.agentsLoaded = true;
+        render();
+      }, err => {
+        console.error('Agents listener error:', err);
+        state.agentsLoaded = true;
+      });
+    });
+  }
+
+  // ─── HELPERS ───────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function pkgJson(pkg) {
+    return JSON.stringify(pkg).replace(/"/g, '&quot;');
+  }
+
+  function saveLocal(key, data) {
+    try { localStorage.setItem(key, JSON.stringify(data)); } catch(_) {}
+  }
+
+  // ─── GOOGLE SHEETS CONFIG ─────────────────────────────────────────────────
+  // Replace these placeholders with your real values before deploying
+  const SHEETS_API_KEY   = 'AIzaSyDisrNkNk5gveBYrhQRg5xuX__ThNdDFvM';
+  const SHEETS_ID        = '1DqDfJb6My3mPMlArN02czNR7LlEv1I_iwW5NiIb4aiM';
+  const SHEETS_RANGE     = 'Sheet1';
+
+  // Google Drive folder config
+  const DRIVE_FOLDER_ID  = '1mB1pOWQMtNgP06NeDXzjjBSx6MRCiccG';
+
+  // ── Fetch list of sheets inside the Drive folder ──
+  async function fetchFolderSheets() {
+    if (state.folderFetched) return;
+    state.folderLoading = true;
+    render();
+    try {
+      const url = `https://www.googleapis.com/drive/v3/files?q='${DRIVE_FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,webViewLink)&key=${SHEETS_API_KEY}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `Drive API error ${res.status}`);
+      }
+      const json = await res.json();
+      state.folderSheets = (json.files || []).sort((a, b) => a.name.localeCompare(b.name));
+      state.folderFetched = true;
+      // Reset any previously selected sheet
+      state.activeSheetId   = null;
+      state.activeSheetName = '';
+    } catch (err) {
+      console.error('Drive folder fetch error:', err);
+      state.folderError = 'Could not load folder: ' + err.message;
+    }
+    state.folderLoading = false;
+    render();
+  }
+
+  // ── Fetch a specific sheet by ID from the folder (used by the preview modal) ──
+
+
+  window.handleAgentLogin = async () => {
+    const codeEl = document.getElementById('agt-code-input');
+    const passEl = document.getElementById('agt-pass-input');
+    const agtCode = (codeEl ? codeEl.value : '').trim().toUpperCase();
+    const password = passEl ? passEl.value : '';
+
+    state.agentLoginError = '';
+
+    if (!agtCode || !password) {
+      state.agentLoginError = 'Please enter both your AGT code and password.';
+      render();
+      return;
+    }
+
+    state.agentLoginLoading = true;
+    render();
+
+    // Give the agents listener a brief moment to finish loading on a cold start
+    let attempts = 0;
+    while (!state.agentsLoaded && attempts < 20) {
+      await new Promise(r => setTimeout(r, 150));
+      attempts++;
+    }
+
+    const match = state.agents.find(a => (a.agtCode || '').toUpperCase() === agtCode && a.password === password);
+
+    state.agentLoginLoading = false;
+
+    if (!match) {
+      state.agentLoginError = 'Invalid AGT code or password. Please check your credentials and try again.';
+      render();
+      return;
+    }
+
+    state.agentUnlocked = agtCode;
+    state.agentLoginError = '';
+    sessionStorage.setItem('rayna_agent', agtCode);
+    render();
+    await fetchFolderSheets();
+  };
+
+  window.openPromoFile = (index) => {
+    const file = state.folderSheets[index];
+    if (!file) return;
+    state.previewFile = file;
+    state.previewOpenedAt = Date.now();
+    state.activeSheetId = file.id;
+    render();
+  };
+
+
+  window.agentLogout = () => {
+    state.agentUnlocked  = '';
+    state.folderFetched  = false;
+    state.folderSheets   = [];
+    state.activeSheetId  = null;
+    state.activeSheetName= '';
+    state.agentLoginError = '';
+    sessionStorage.removeItem('rayna_agent');
+    render();
+  };
+
+  // Expected columns in your sheet (adjust to match your actual headers):
+  // HotelName | Location | City | Stars | RoomType | PricePerNight | Currency | ImageURL | BookingURL | Notes
+
+  window.refreshFolderSheets = () => {
+    state.folderFetched = false;
+    state.activeSheetId = null;
+    fetchFolderSheets();
+  };
+
+
+  window.redirectToWhatsApp = (pkg) => {
+    const phoneNumber = "971556232958";
+    const textMessage = `Hello Rayna Tours, I'm interested in booking the following Premium Departure package:
+
+📍 Destination: ${pkg.title}
+⏳ Duration: ${pkg.duration}
+✨ Highlights: ${pkg.highlight || 'Detailed Itinerary Included'}
+📄 Itinerary Details: ${pkg.pdfUrl}
+
+Please let me know the booking procedures and upcoming departures. Thank you!`;
+    
+    const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(textMessage)}`;
+    window.open(waUrl, '_blank');
+  };
+
+  // ─── DISPATCH ──────────────────────────────────────────────────────────────
+  window.dispatch = (action, payload) => {
+    switch(action) {
+      case 'SEARCH':
+        state.searchQuery = payload;
+        break;
+      case 'ADMIN_SEARCH':
+        state.adminSearchQuery = payload;
+        break;
+      case 'SET_COUNTRY_FILTER':
+        state.selectedCountryFilter = payload;
+        break;
+      case 'LOGOUT':
+        state.isLoggedIn = false;
+        sessionStorage.removeItem('rayna_admin_auth');
+        const url = new URL(window.location);
+        url.searchParams.delete('admin');
+        window.history.pushState({}, '', url);
+        break;
+      case 'GO_HOME':
+        const u2 = new URL(window.location);
+        u2.searchParams.delete('admin');
+        window.history.pushState({}, '', u2);
+        break;
+      case 'SWITCH_VIEW':
+        state.activeView = payload;
+        break;
+      case 'HOTEL_SEARCH':
+        state.hotelSearch = payload;
+        break;
+      case 'FOLDER_SEARCH':
+        state.folderSearch = payload;
+        break;
+      case 'TOGGLE_AGENT_LOGIN_FORM':
+        state.showAgentLoginForm = !state.showAgentLoginForm;
+        state.agentLoginError = '';
+        break;
+      case 'SWITCH_ADMIN_SECTION':
+        state.adminSection = payload;
+        sessionStorage.setItem('rayna_admin_section', payload);
+        break;
+      case 'AGENT_SEARCH':
+        state.agentSearchQuery = payload;
+        break;
+      case 'TOGGLE_REVEAL_PASSWORD': {
+        const idx = state.revealedAgentIds.indexOf(payload);
+        if (idx === -1) state.revealedAgentIds.push(payload);
+        else state.revealedAgentIds.splice(idx, 1);
+        break;
+      }
+      case 'ZOOM_OUT':
+        state.previewZoom = Math.max(50, state.previewZoom - 25);
+        break;
+      case 'ZOOM_IN':
+        state.previewZoom = Math.min(200, state.previewZoom + 25);
+        break;
+      case 'ZOOM_RESET':
+        state.previewZoom = 100;
+        break;
+    }
+    render();
+  };
+
+  // ─── EVENT HANDLERS ────────────────────────────────────────────────────────
+  window.handleLogin = async (e) => {
+    e.preventDefault();
+    const user = document.getElementById('f-user')?.value?.trim();
+    const pass = document.getElementById('f-pass')?.value;
+    state.loginError = '';
+    state.loginLoading = true;
+    render();
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        state.isLoggedIn = true;
+        sessionStorage.setItem('rayna_admin_auth', 'true');
+      } else {
+        state.loginError = data.error || 'Incorrect username or password. Please try again.';
+      }
+    } catch (err) {
+      state.loginError = 'Network error. Please try again.';
+    }
+
+    state.loginLoading = false;
+    render();
+  };
+
+  window.handleStartEdit = (id) => {
+    const pkg = state.packages.find(p => p.id === id);
+    if (!pkg) return;
+    state.editingId = id;
+    state.draft = { title: pkg.title, duration: pkg.duration, highlight: pkg.highlight, image: pkg.image || '', pdfUrl: pkg.pdfUrl };
+    state.formError = '';
+    state.formSuccess = '';
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.handleCancelEdit = () => {
+    state.editingId = null;
+    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+    state.formError = '';
+    state.formSuccess = '';
+    render();
+  };
+
+  window.handlePackageSubmit = async (e) => {
+    e.preventDefault();
+    state.formError = '';
+    state.formSuccess = '';
+
+    const title     = document.getElementById('f-title')?.value?.trim();
+    const duration  = document.getElementById('f-duration')?.value?.trim();
+    const highlight = document.getElementById('f-highlight')?.value?.trim();
+    const image     = document.getElementById('f-image')?.value?.trim();
+    const pdfUrl    = document.getElementById('f-pdf')?.value?.trim();
+
+    if (!title || !duration || !pdfUrl) {
+      state.formError = 'Country title, duration, and PDF link are required.';
+      render(); return;
+    }
+
+    try { new URL(pdfUrl); } catch(_) {
+      state.formError = 'Please enter a valid PDF URL (must start with https://).';
+      render(); return;
+    }
+
+    const payload = {
+      title: title.trim(),
+      duration: duration.trim(),
+      highlight: highlight || '',
+      image: image || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
+      pdfUrl,
+      createdAt: new Date().toISOString()
+    };
+
+    if (!isFirebaseReady || !db) {
+      if (state.editingId) {
+        state.packages = state.packages.map(p => p.id === state.editingId ? { ...p, ...payload } : p);
+      } else {
+        state.packages = [{ id: 'pkg-' + Date.now(), ...payload }, ...state.packages];
+      }
+      saveLocal('rayna_pkgs_v4', state.packages);
+      state.editingId = null;
+      state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+      state.formSuccess = state.editingId ? 'Package updated.' : 'Package published successfully.';
+      render(); return;
+    }
+
+    try {
+      if (state.editingId) {
+        const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'packages', state.editingId);
+        await updateDoc(ref, payload);
+        state.formSuccess = 'Package updated successfully.';
+      } else {
+        const col = collection(db, 'artifacts', APP_ID, 'public', 'data', 'packages');
+        await addDoc(col, payload);
+        state.formSuccess = 'Package published successfully.';
+      }
+      state.editingId = null;
+      state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+    } catch (err) {
+      state.formError = 'Database error: ' + err.message;
+    }
+    render();
+  };
+
+  window.triggerDeleteConfirmation = (id) => {
+    state.deleteTarget = { type: 'package', id };
+    render();
+  };
+
+  window.triggerAgentDeleteConfirmation = (id) => {
+    state.deleteTarget = { type: 'agent', id };
+    render();
+  };
+
+  window.cancelDelete = () => {
+    state.deleteTarget = null;
+    render();
+  };
+
+  window.confirmDelete = async () => {
+    const target = state.deleteTarget;
+    if (!target) return;
+    const { type, id } = target;
+
+    if (type === 'agent') {
+      if (!isFirebaseReady || !db) {
+        state.agents = state.agents.filter(a => a.id !== id);
+        saveLocal('rayna_agents_v1', state.agents);
+      } else {
+        try {
+          await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'agents', id));
+        } catch (err) { console.error('Agent delete error:', err); }
+      }
+      if (state.editingAgentId === id) { state.editingAgentId = null; state.agentDraft = { agtCode: '', password: '' }; }
+      state.deleteTarget = null;
+      render();
+      return;
+    }
+
+    // type === 'package'
+    if (!isFirebaseReady || !db) {
+      state.packages = state.packages.filter(p => p.id !== id);
+      saveLocal('rayna_pkgs_v4', state.packages);
+      if (state.editingId === id) { state.editingId = null; state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' }; }
+      state.deleteTarget = null;
+      render(); return;
+    }
+    try {
+      await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'packages', id));
+      if (state.editingId === id) { state.editingId = null; state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' }; }
+    } catch (err) { console.error('Delete error:', err); }
+    
+    state.deleteTarget = null;
+    render();
+  };
+
+  // ─── AGENT (ACCESS LIST) HANDLERS ──────────────────────────────────────────
+  window.handleAgentStartEdit = (id) => {
+    const agent = state.agents.find(a => a.id === id);
+    if (!agent) return;
+    state.editingAgentId = id;
+    state.agentDraft = { agtCode: agent.agtCode, password: agent.password };
+    state.agentFormError = '';
+    state.agentFormSuccess = '';
+    render();
+  };
+
+  window.handleAgentCancelEdit = () => {
+    state.editingAgentId = null;
+    state.agentDraft = { agtCode: '', password: '' };
+    state.agentFormError = '';
+    state.agentFormSuccess = '';
+    render();
+  };
+
+  window.handleAgentSubmit = async (e) => {
+    e.preventDefault();
+    state.agentFormError = '';
+    state.agentFormSuccess = '';
+
+    const agtCodeRaw = document.getElementById('f-agt-code')?.value?.trim();
+    const password    = document.getElementById('f-agt-password')?.value;
+
+    if (!agtCodeRaw || !password) {
+      state.agentFormError = 'AGT code and password are both required.';
+      render(); return;
+    }
+
+    const agtCode = agtCodeRaw.toUpperCase();
+
+    const duplicate = state.agents.find(a => a.agtCode.toUpperCase() === agtCode && a.id !== state.editingAgentId);
+    if (duplicate) {
+      state.agentFormError = `AGT code "${agtCode}" already exists. Choose a different code or edit the existing entry.`;
+      render(); return;
+    }
+
+    const payload = { agtCode, password, createdAt: new Date().toISOString() };
+
+    if (!isFirebaseReady || !db) {
+      if (state.editingAgentId) {
+        state.agents = state.agents.map(a => a.id === state.editingAgentId ? { ...a, ...payload } : a);
+      } else {
+        state.agents = [...state.agents, { id: 'agt-' + Date.now(), ...payload }];
+      }
+      saveLocal('rayna_agents_v1', state.agents);
+      state.agentFormSuccess = state.editingAgentId ? 'Access updated.' : 'Agent access granted.';
+      state.editingAgentId = null;
+      state.agentDraft = { agtCode: '', password: '' };
+      render(); return;
+    }
+
+    try {
+      if (state.editingAgentId) {
+        const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'agents', state.editingAgentId);
+        await updateDoc(ref, payload);
+        state.agentFormSuccess = 'Access updated successfully.';
+      } else {
+        const col = collection(db, 'artifacts', APP_ID, 'public', 'data', 'agents');
+        await addDoc(col, payload);
+        state.agentFormSuccess = 'Agent access granted successfully.';
+      }
+      state.editingAgentId = null;
+      state.agentDraft = { agtCode: '', password: '' };
+    } catch (err) {
+      state.agentFormError = 'Database error: ' + err.message;
+    }
+    render();
+  };
+
+  // ─── RENDER ────────────────────────────────────────────────────────────────
+  function render() {
+    // Save current active input ID and cursor selection to prevent drop focus
+    const activeId = document.activeElement ? document.activeElement.id : null;
+    let selectionStart = null;
+    let selectionEnd = null;
+    if (activeId) {
+      const activeEl = document.getElementById(activeId);
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        selectionStart = activeEl.selectionStart;
+        selectionEnd = activeEl.selectionEnd;
+      }
+    }
+
+    state.view = getView();
+    const container = document.getElementById('app');
+    if (!container) return;
+
+    const filtered = state.packages.filter(p => {
+      const q = state.searchQuery.toLowerCase();
+      const matchesSearch = !q || esc(p.title).toLowerCase().includes(q) || esc(p.highlight).toLowerCase().includes(q);
+      const matchesCountry = state.selectedCountryFilter === 'All' || p.title === state.selectedCountryFilter;
+      return matchesSearch && matchesCountry;
+    });
+
+    let html = '';
+
+    // ── FLUID STICKY NAV WITH EMBEDDED SEARCH BOX ──
+    html += `
+    <header style="position: -webkit-sticky; position: sticky; top: 0; z-index: 50; background: #ffffff; box-shadow: 0 2px 12px rgba(10,22,40,0.06); border-bottom: 1px solid #ede9e1; width: 100%;">
+      <div style="width:100%;padding:0 20px;height:58px;display:flex;justify-content:space-between;align-items:center;gap:16px;">
+        
+        <!-- View Toggle (moved here from center) + Status -->
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          ${state.view === 'customer' ? `
+            <div class="view-toggle">
+              <button class="view-toggle-btn ${state.activeView === 'packages' ? 'active' : ''}"
+                onclick="dispatch('SWITCH_VIEW', 'packages')">
+                ✈ Packages
+              </button>
+              <button class="view-toggle-btn ${state.activeView === 'hotels' ? 'active' : ''}"
+                onclick="dispatch('SWITCH_VIEW', 'hotels')">
+                🏨 Hotels
+              </button>
+            </div>
+          ` : `
+            <div class="hidden md:block" style="cursor:pointer;" onclick="dispatch('GO_HOME')">
+              <div style="font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(10,22,40,0.5);display:flex;align-items:center;gap:4px;margin-top:1px;">
+                <span class="live-dot"></span>
+                ${(isFirebaseReady && db) ? 'Cloud connected' : 'Local mode'}
+              </div>
+            </div>
+          `}
+        </div>
+
+        <!-- Embedded Sticky Search Box (Only on customer page) -->
+        ${state.view === 'customer' ? `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+
+            <!-- Search box — only visible in packages view -->
+            ${state.activeView === 'packages' ? `
+              <div style="position:relative;flex:1;max-width:300px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(10,22,40,0.4)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Search departures..."
+                  value="${esc(state.searchQuery)}"
+                  oninput="dispatch('SEARCH', this.value)"
+                  style="width:100%;background:var(--cream);border:1px solid #ede9e1;border-radius:20px;padding:6px 12px 6px 32px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;transition:all 0.2s;"
+                  onfocus="this.style.borderColor='var(--gold)';"
+                  onblur="this.style.borderColor='#ede9e1';"
+                />
+              </div>
+            ` : ''}
+
+          </div>
+        ` : ''}
+
+        <!-- Actions -->
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          ${state.isLoggedIn && state.view === 'admin' ? `
+            <button class="btn-outline" style="font-size:10px;padding:6px 12px;border-radius:4px;" onclick="dispatch('LOGOUT')">
+              Sign Out
+            </button>
+          ` : ''}
+          ${state.view === 'admin-login' ? `
+            <button class="btn-outline" style="font-size:10px;padding:6px 12px;border-radius:4px;" onclick="dispatch('GO_HOME')">
+              ← Client Portal
+            </button>
+          ` : ''}
+          ${state.view === 'customer' && !state.isLoggedIn ? `
+            <a href="?admin" style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(10,22,40,0.5);text-decoration:none;" title="Admin Login" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='rgba(10,22,40,0.5)'">Admin Access</a>
+          ` : ''}
+        </div>
+      </div>
+    </header>`;
+
+    if (state.view === 'customer') {
+      if (state.activeView === 'hotels') {
+        html += renderHotels();
+      } else {
+        html += renderCustomer(filtered);
+      }
+    } else if (state.view === 'admin-login') {
+      html += renderLogin();
+    } else if (state.view === 'admin') {
+      html += renderAdmin();
+    }
+
+    if (state.deleteTarget) {
+      html += renderDeleteConfirmationModal();
+    }
+
+    // ── STICKY FLOATING BADGE (BOTTOM-RIGHT): Designer Credit ──
+    html += `
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 45; display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 14px; border-radius: 30px; border: 1px solid #ede9e1; box-shadow: 0 4px 12px rgba(10,22,40,0.08); font-size: 11px; color: rgba(10,22,40,0.6); transition: transform 0.2s ease-in-out;" class="hover:scale-105">
+      <span>Designed & developed by</span>
+      <a href="https://www.instagram.com/the_volleydrum" target="_blank" rel="noopener noreferrer" style="color:var(--gold); font-weight:700; text-decoration:none; border-bottom: 1px solid transparent; transition: border-color 0.2s;" onmouseover="this.style.borderBottomColor='var(--gold)'" onmouseout="this.style.borderBottomColor='transparent'">
+        SAURAV CHAUHAN
+      </a>
+    </div>`;
+
+    // ── STICKY FLOATING TRIGGER (BOTTOM-RIGHT - STACKED ABOVE CREDIT) ──
+    const isScrolled = window.scrollY > 300;
+    const scrollClasses = isScrolled 
+      ? "opacity-100 translate-y-0 hover:scale-105 active:scale-95" 
+      : "opacity-0 translate-y-4 pointer-events-none hover:scale-105 active:scale-95";
+
+    html += `
+    <button 
+      id="back-to-top" 
+      onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+      style="position:fixed; bottom:74px; right:20px; z-index:50; width:44px; height:44px; border-radius:50%; background:var(--navy); border:1px solid var(--gold); color:var(--gold); display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(10,22,40,0.15); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);"
+      class="${scrollClasses}"
+      title="Go to Top"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+    `;
+
+    html += renderPreviewModal();
+    container.innerHTML = html;
+
+    // Restore focus and cursor positions smoothly
+    if (activeId) {
+      const restoreEl = document.getElementById(activeId);
+      if (restoreEl) {
+        restoreEl.focus();
+        if (selectionStart !== null && selectionEnd !== null && typeof restoreEl.setSelectionRange === 'function') {
+          restoreEl.setSelectionRange(selectionStart, selectionEnd);
+        }
+      }
+    }
+  }
+
+  // ── CUSTOMER VIEW ──────────────────────────────────────────────────────────
+  function renderCustomer(filtered) {
+    const destinations = ['All', ...new Set(state.packages.map(p => p.title))];
+
+    return `
+    <main style="flex: 1; width: 100%; padding-bottom: 80px;">
+      <div class="hero-bg" style="position:relative;padding:48px 20px;text-align:center;">
+        <div style="max-width:680px;margin:0 auto;position:relative;z-index:2;">
+          <div style="display:inline-block;border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:12px;">
+            Rayna Premium Departures
+          </div>
+          <h1 style="font-family:'Cormorant Garamond',serif;font-size:clamp(28px,5vw,42px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:10px;">
+            Explore the World with <em style="color:var(--gold);font-style:normal;">Rayna Tours</em>
+          </h1>
+          <p style="color:rgba(255,255,255,0.6);font-size:13px;max-width:440px;margin:0 auto;font-weight:300;line-height:1.5;">
+            Premium itineraries tailored for discerning groups. Get instant itinerary access and directly connect with us via WhatsApp to book.
+          </p>
+        </div>
+      </div>
+
+      <!-- Fluid Width Filter Bar -->
+      <section style="padding:20px 20px 0;background:#fff;border-bottom:1px solid #ede9e1; width: 100%;">
+        <div style="width:100%; padding: 0 10px;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <span style="font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#888;">Filter by Destination</span>
+            <div style="display:flex;gap:8px;overflow-x:auto;width:100%;padding-bottom:16px;scrollbar-width:none;" class="justify-start md:justify-center no-scrollbar">
+              ${destinations.map(country => {
+                const isSelected = state.selectedCountryFilter === country;
+                return `
+                  <button 
+                    onclick="dispatch('SET_COUNTRY_FILTER', '${esc(country)}')"
+                    style="
+                      white-space:nowrap;
+                      font-family:'DM Sans',sans-serif;
+                      font-size:11px;
+                      font-weight:600;
+                      letter-spacing:0.04em;
+                      padding:6px 14px;
+                      border-radius:30px;
+                      cursor:pointer;
+                      transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                      border:1px solid ${isSelected ? 'var(--gold)' : '#ede9e1'};
+                      background: ${isSelected ? 'var(--navy)' : '#fff'};
+                      color: ${isSelected ? 'var(--gold)' : 'var(--navy)'};
+                    "
+                  >
+                    ${esc(country)}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fully Fluid Catalog Grid spanning edge-to-edge -->
+      <section style="padding:40px 20px;background:var(--cream); width:100%;">
+        <div style="width:100%; padding: 0 10px;">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+            <div>
+              <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;margin:0;">Curated Journeys</h2>
+            </div>
+            <span style="font-size:11px;font-weight:500;color:#666;background:#fff;border:1px solid #ede9e1;padding:4px 10px;border-radius:4px;">
+              Showing ${filtered.length} departure${filtered.length === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          ${state.isDbLoading ? `
+            <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px solid #ede9e1; width:100%;">
+              <div class="spinner" style="margin:0 auto 12px;"></div>
+              <p style="font-size:12px;color:#888;font-weight:500;">Retrieving schedules...</p>
+            </div>
+          ` : filtered.length === 0 ? `
+            <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px dashed #d5d0c8; width:100%;">
+              <p style="font-size:14px;color:#888;">No group departures match your current filters.</p>
+              <button onclick="dispatch('SET_COUNTRY_FILTER', 'All'); dispatch('SEARCH', '')" style="margin-top:10px;font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Reset all filters</button>
+            </div>
+          ` : `
+            <!-- Optimized fluid Grid columns utilizing available horizontal spaces -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
+              ${filtered.map(pkg => `
+                <div class="pkg-card" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ede9e1;display:flex;flex-direction:column;">
+                  
+                  <div class="img-wrap">
+                    <img src="${esc(pkg.image)}" alt="${esc(pkg.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'" />
+                    ${pkg.highlight ? `<div class="highlight-strip">${esc(pkg.highlight)}</div>` : ''}
+                  </div>
+
+                  <div style="padding:16px;flex:1;display:flex;flex-direction:column;">
+                    <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;margin:0 0 4px;color:var(--navy);">${esc(pkg.title)}</h3>
+                    <p style="font-size:11px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:#888;margin-bottom:14px;">${esc(pkg.duration)}</p>
+                    
+                    <div style="flex:1;"></div>
+
+                    <div style="border-top:1px solid #f0ece4;padding-top:12px;display:flex;flex-direction:column;gap:8px;">
+                      <a href="${esc(pkg.pdfUrl)}" target="_blank" rel="noopener noreferrer" class="btn-gold" style="width:100%;justify-content:center;text-decoration:none;padding:8px 12px;border-radius:4px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        Itinerary PDF
+                      </a>
+                      
+                      <button onclick="window.redirectToWhatsApp(${pkgJson(pkg)})" class="btn-whatsapp" style="width:100%;justify-content:center;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                        Connect on WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+
+        </div>
+      </section>
+    </main>`;
+  }
+
+
+  // ── FILE PREVIEW MODAL ────────────────────────────────────────────────────
+  function renderPreviewModal() {
+    if (!state.previewFile) return '';
+    const file = state.previewFile;
+    const { icon, label } = fileIcon(file.mimeType);
+    const zoom = state.previewZoom || 100;
+    const isSheet = file.mimeType === 'application/vnd.google-apps.spreadsheet';
+
+    // Sheets use htmlview (shows original formatting), everything else uses /preview
+    const embedUrl = isSheet
+      ? `https://docs.google.com/spreadsheets/d/${file.id}/htmlview?embedded=true&rm=minimal`
+      : `https://drive.google.com/file/d/${file.id}/preview?embedded=true`;
+
+    return `
+      <div class="file-modal-overlay" onclick="if(event.target===this)closePreview()">
+        <div class="file-modal">
+
+          <div class="file-modal-header">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <span style="font-size:18px;">${icon}</span>
+              <div style="min-width:0;">
+                <div style="font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50vw;">${esc(file.name)}</div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#aaa;margin-top:1px;">${label}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <button onclick="dispatch('ZOOM_OUT')" style="width:30px;height:30px;border-radius:6px;border:1px solid #ede9e1;background:#faf8f4;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--navy);" title="Zoom Out">−</button>
+              <span style="font-size:11px;font-weight:600;color:#888;min-width:36px;text-align:center;">${zoom}%</span>
+              <button onclick="dispatch('ZOOM_IN')" style="width:30px;height:30px;border-radius:6px;border:1px solid #ede9e1;background:#faf8f4;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--navy);" title="Zoom In">+</button>
+              <button onclick="dispatch('ZOOM_RESET')" style="height:30px;padding:0 10px;border-radius:6px;border:1px solid #ede9e1;background:#faf8f4;cursor:pointer;font-size:10px;font-weight:600;color:#888;font-family:'DM Sans',sans-serif;">Reset</button>
+              <div style="width:1px;height:24px;background:#ede9e1;margin:0 4px;"></div>
+              <button onclick="closePreview()"
+                style="width:30px;height:30px;border-radius:6px;border:1px solid #ede9e1;background:#faf8f4;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#888;"
+                onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'"
+                onmouseout="this.style.background='#faf8f4';this.style.color='#888'"
+                title="Close">✕</button>
+            </div>
+          </div>
+
+          <div class="file-modal-body" style="overflow:auto;background:#525659;">
+            <div style="width:${zoom}%;min-width:${zoom < 100 ? '100%' : 'auto'};margin:0 auto;">
+              <iframe
+                src="${embedUrl}"
+                title="${esc(file.name)}"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
+                style="width:100%;height:calc((100vh - 90px) * ${zoom / 100});border:none;display:block;"
+              ></iframe>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+  window.closePreview = () => {
+    state.previewFile = null;
+    state.previewZoom = 100;
+    state.activeSheetId = null;
+    render();
+  };
+
+  // ── HOTELS VIEW ────────────────────────────────────────────────────────────
+  function fileIcon(mimeType) {
+    if (mimeType === 'application/vnd.google-apps.spreadsheet') return { icon: '🟢', label: 'Google Sheet', color: '#16a34a' };
+    if (mimeType === 'application/pdf')                          return { icon: '📄', label: 'PDF',          color: '#dc2626' };
+    if (mimeType.includes('spreadsheetml') || mimeType.includes('excel')) return { icon: '📊', label: 'Excel', color: '#15803d' };
+    if (mimeType === 'application/vnd.google-apps.document')    return { icon: '📝', label: 'Doc',          color: '#2563eb' };
+    if (mimeType.includes('presentation'))                       return { icon: '📑', label: 'Slides',       color: '#d97706' };
+    return { icon: '📁', label: 'File', color: '#6b7280' };
+  }
+
+  function renderHotels() {
+
+    // ── When an agent is logged in: show folder file list + optional sheet table ──
+    if (state.agentUnlocked) {
+      const fileList = state.folderLoading ? `
+        <div style="text-align:center;padding:40px;background:#fff;border-radius:8px;border:1px solid #ede9e1;">
+          <div class="spinner" style="margin:0 auto 12px;"></div>
+          <p style="font-size:12px;color:#888;">Loading files…</p>
+        </div>
+      ` : state.folderError ? `
+        <div style="text-align:center;padding:40px;background:#fff;border-radius:8px;border:1px solid #fecaca;">
+          <p style="font-size:13px;color:#991b1b;font-weight:600;margin:0 0 8px;">Could not load folder</p>
+          <p style="font-size:12px;color:#b91c1c;margin:0;">${esc(state.folderError)}</p>
+        </div>
+      ` : state.folderSheets.length === 0 ? `
+        <div style="text-align:center;padding:40px;background:#fff;border-radius:8px;border:1px dashed #d5d0c8;">
+          <p style="font-size:14px;color:#888;">No files found in folder.</p>
+        </div>
+      ` : `
+        <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+          <div style="padding:12px 18px;background:var(--slate-soft);border-bottom:1px solid #ede9e1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:600;color:#666;">${state.folderSheets.length} file${state.folderSheets.length === 1 ? '' : 's'} available</span>
+            <div style="position:relative;flex:1;max-width:260px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input id="folder-search" type="text" placeholder="Search files..." value="${esc(state.folderSearch)}"
+                oninput="dispatch('FOLDER_SEARCH', this.value)"
+                style="width:100%;font-family:'DM Sans',sans-serif;font-size:11px;padding:5px 8px 5px 26px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"
+                onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#ddd8ce'"/>
+            </div>
+            <button onclick="refreshFolderSheets()" style="font-size:10px;font-weight:600;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;flex-shrink:0;">↻ Refresh</button>
+          </div>
+          ${state.folderSheets.filter(f => !state.folderSearch || f.name.toLowerCase().includes(state.folderSearch.toLowerCase())).map((file, i) => {
+            const { icon, label, color } = fileIcon(file.mimeType);
+            const isActive = state.activeSheetId === file.id;
+            const bg = isActive ? 'background:#fffbf0;' : '';
+            return '<div onclick="openPromoFile(' + i + ')" class="file-row" style="display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #f0ece4;cursor:pointer;' + bg + '">'
+              + '<span style="font-size:20px;flex-shrink:0;">' + icon + '</span>'
+              + '<div style="flex:1;min-width:0;">'
+              + '<div style="font-size:13px;font-weight:' + (isActive ? '700' : '500') + ';color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(file.name) + '</div>'
+              + '<div style="font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:' + color + ';margin-top:2px;">' + label + '</div>'
+              + '</div>'
+              + '<span style="font-size:10px;font-weight:600;color:#aaa;letter-spacing:0.05em;text-transform:uppercase;flex-shrink:0;">Preview →</span>'
+              + '</div>';
+          }).join('')}
+        </div>
+      `;
+
+      const sheetTable = ''; // handled by modal
+
+      return `
+      <main style="flex:1;width:100%;padding:32px 20px 80px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;">Private Files</h2>
+            <p style="font-size:12px;color:#888;margin:0;">Your exclusive access folder.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;">🔓 Agent ${esc(state.agentUnlocked)}</span>
+            <button onclick="agentLogout()" style="font-size:10px;font-weight:600;color:#aaa;background:none;border:1px solid #ddd;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕ Sign Out</button>
+          </div>
+        </div>
+        ${fileList}
+        ${sheetTable}
+      </main>`;
+    }
+
+    // ── Default: common sheet view — iframe embed ──
+    // Append search query as a hash to scroll to matching tab if sheet has named tabs
+    const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/htmlview?embedded=true&rm=minimal`;
+
+    return `
+    <main style="flex:1;width:100%;padding:32px 20px 80px;">
+
+      <!-- Header row: title + promo + search -->
+      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;">Hotel Directory</h2>
+          <p style="font-size:12px;color:#888;margin:0;">Curated hotel options — live from our database.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
+          <!-- Search box -->
+          <div style="position:relative;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input
+              id="hotel-search-input"
+              type="text"
+              placeholder="Search in sheet…"
+              value="${esc(state.hotelSearch)}"
+              oninput="dispatch('HOTEL_SEARCH', this.value)"
+              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 12px 6px 30px;border:1px solid #ddd8ce;border-radius:6px;outline:none;width:180px;color:var(--navy);background:#fff;"
+              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#ddd8ce'"/>
+            ${state.hotelSearch ? `<button onclick="dispatch('HOTEL_SEARCH','')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#aaa;line-height:1;">✕</button>` : ''}
+          </div>
+
+          <!-- Agent Login trigger -->
+          <button onclick="dispatch('TOGGLE_AGENT_LOGIN_FORM')" class="btn-outline" style="padding:6px 14px;font-size:10px;display:flex;align-items:center;gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+            Agent Login
+          </button>
+        </div>
+      </div>
+
+      ${state.showAgentLoginForm ? `
+        <div style="max-width:340px;margin:0 0 20px;background:#fff;border:1px solid #ede9e1;border-radius:8px;padding:18px;">
+          <div style="margin-bottom:12px;">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Agent Access</h3>
+            <p style="font-size:11px;color:#888;margin:0;">Sign in with your AGT code to unlock private hotel files.</p>
+          </div>
+          ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label class="field-label" for="agt-code-input">AGT Code</label>
+              <input class="field" id="agt-code-input" type="text" placeholder="e.g. AGT1024" style="text-transform:uppercase;"
+                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
+            </div>
+            <div>
+              <label class="field-label" for="agt-pass-input">Password</label>
+              <input class="field" id="agt-pass-input" type="password" placeholder="••••••••"
+                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
+            </div>
+            <button onclick="handleAgentLogin()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;" ${state.agentLoginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
+              ${state.agentLoginLoading ? 'Verifying…' : 'Sign In'}
+            </button>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Search results overlay (shown when searching) -->
+      ${state.hotelSearch ? `
+        <div id="hotel-search-results" style="margin-bottom:16px;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+          <div style="padding:10px 16px;background:var(--slate-soft);border-bottom:1px solid #ede9e1;display:flex;align-items:center;gap:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="font-size:11px;font-weight:600;color:#666;">Searching for "<strong>${esc(state.hotelSearch)}</strong>" in the sheet below — use Ctrl+F in the sheet to highlight matches</span>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Sheet iframe -->
+      <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+        <iframe
+          id="hotel-sheet-iframe"
+          src="${sheetEmbedUrl}"
+          style="width:100%;height:calc(100vh - ${state.hotelSearch ? '280' : '220'}px);min-height:500px;border:none;display:block;"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
+          title="Hotel Directory"
+        ></iframe>
+      </div>
+
+      ${state.hotelSearch ? `
+        <div style="margin-top:10px;text-align:center;">
+          <p style="font-size:11px;color:#aaa;">Tip: Click inside the sheet and press <kbd style="background:#f5f3ef;border:1px solid #ddd8ce;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+F</kbd> to find "<strong>${esc(state.hotelSearch)}</strong>" within the sheet</p>
+        </div>
+      ` : ''}
+
+    </main>`;
+  }
+
+  // ── LOGIN VIEW ─────────────────────────────────────────────────────────────
+  function renderLogin() {
+    return `
+    <main style="flex:1;display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 58px);padding:24px;background:var(--navy-mid); width: 100%;">
+      <div style="width:100%;max-width:360px;">
+        <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.2);">
+          
+          <div style="background:var(--navy);padding:24px;text-align:center;">
+            <div style="font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">Rayna Tours Platform</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#fff;margin:0;">Control Center</h2>
+          </div>
+
+          <form onsubmit="handleLogin(event)" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+            ${state.loginError ? `<div class="error-box">${esc(state.loginError)}</div>` : ''}
+
+            <div>
+              <label class="field-label" for="f-user">Username</label>
+              <input class="field" id="f-user" type="text" placeholder="admin@rayna" autocomplete="username" />
+            </div>
+            <div>
+              <label class="field-label" for="f-pass">Password</label>
+              <input class="field" id="f-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </div>
+
+            <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:10px;border-radius:4px;" ${state.loginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
+              ${state.loginLoading ? 'Verifying…' : 'Access Dashboard'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>`;
+  }
+
+  // ── ADMIN VIEW ─────────────────────────────────────────────────────────────
+  function renderAdmin() {
+    const isCloud = !!(isFirebaseReady && db);
+
+    const adminBarAndNav = `
+      <div class="admin-bar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="background:rgba(201,168,76,0.15);padding:8px;border-radius:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:13px;">Rayna Admin Dashboard</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px;">
+              ${isCloud ? 'Live cloud synchronizing' : 'Local storage fallback active'}
+            </div>
+          </div>
+        </div>
+        <span style="font-size:8px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border-radius:20px;${isCloud ? 'background:rgba(34,197,94,0.1);color:#4ade80;border:1px solid rgba(34,197,94,0.2);' : 'background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.25);'}">
+          ${isCloud ? '● Synchronized' : '○ Local Database'}
+        </span>
+      </div>
+
+      <div class="view-toggle" style="margin-bottom:20px;">
+        <button class="view-toggle-btn ${state.adminSection === 'packages' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'packages')">✈ Departures</button>
+        <button class="view-toggle-btn ${state.adminSection === 'agents' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'agents')">🔑 Access List</button>
+      </div>
+    `;
+
+    if (state.adminSection === 'agents') {
+      return `<main style="flex: 1; width: 100%; padding:24px 20px; padding-bottom: 80px;">${adminBarAndNav}${renderAdminAgents()}</main>`;
+    }
+
+    return `<main style="flex: 1; width: 100%; padding:24px 20px; padding-bottom: 80px;">${adminBarAndNav}${renderAdminPackages()}</main>`;
+  }
+
+  function renderAdminPackages() {
+    const adminQuery = (state.adminSearchQuery || '').toLowerCase();
+
+    const adminFiltered = state.packages.filter(p => {
+      return !adminQuery || 
+             esc(p.title).toLowerCase().includes(adminQuery) || 
+             esc(p.highlight).toLowerCase().includes(adminQuery) ||
+             esc(p.duration).toLowerCase().includes(adminQuery);
+    });
+
+    return `
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+        
+        <!-- Sticky Form Panel -->
+        <div class="lg:sticky lg:top-[74px] w-full lg:max-w-[320px] flex-shrink-0" style="background:#fff;border-radius:8px;border:1px solid #ede9e1;padding:18px;">
+          <div style="margin-bottom:14px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:#f5f3ef;color:#666;padding:3px 8px;border-radius:3px;">
+              ${state.editingId ? 'Edit Draft' : 'Add Departure'}
+            </span>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:6px 0 0;">
+              ${state.editingId ? 'Edit Package Specs' : 'Publish New Destination'}
+            </h3>
+          </div>
+
+          ${state.formError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.formError)}</div>` : ''}
+          ${state.formSuccess ? `<div class="success-box" style="margin-bottom:12px;">${esc(state.formSuccess)}</div>` : ''}
+
+          <form onsubmit="handlePackageSubmit(event)" style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label class="field-label" for="f-title">Destination Country *</label>
+              <input class="field" id="f-title" type="text" placeholder="e.g. Switzerland" value="${esc(state.draft.title)}" required />
+            </div>
+            <div>
+              <label class="field-label" for="f-duration">Duration Description *</label>
+              <input class="field" id="f-duration" type="text" placeholder="e.g. 3 Nights / 4 Days" value="${esc(state.draft.duration)}" required />
+            </div>
+            <div>
+              <label class="field-label" for="f-highlight">Highlight Summary</label>
+              <input class="field" id="f-highlight" type="text" placeholder="e.g. Zurich 3N" value="${esc(state.draft.highlight)}" />
+            </div>
+            <div>
+              <label class="field-label" for="f-image">Card Image URL</label>
+              <input class="field" id="f-image" type="url" placeholder="https://unsplash..." value="${esc(state.draft.image)}" />
+            </div>
+            <div style="background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:10px;">
+              <label class="field-label" for="f-pdf">Itinerary Link (PDF) *</label>
+              <input class="field" id="f-pdf" type="url" placeholder="https://..." value="${esc(state.draft.pdfUrl)}" required />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px;">
+              <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:9px;border-radius:4px;">
+                ${state.editingId ? 'Save Specs' : 'Publish Departure'}
+              </button>
+              ${state.editingId ? `
+                <button type="button" class="btn-outline" onclick="handleCancelEdit()" style="width:100%;justify-content:center;padding:8px;">
+                  Cancel
+                </button>
+              ` : ''}
+            </div>
+          </form>
+        </div>
+
+        <!-- Directory Panel stretching fluidly to use maximum widescreen space -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:20px;width:100%;">
+          
+          <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+            <div style="padding:14px 18px;border-bottom:1px solid #ede9e1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:0;">Active Departures Directory</h3>
+                <span style="font-size:11px;color:#888;font-weight:500;">
+                  ${adminFiltered.length} of ${state.packages.length} listed
+                </span>
+              </div>
+
+              <!-- Admin search filter -->
+              <div style="position:relative; width:100%; max-width:240px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="admin-search-input"
+                  placeholder="Search departures..."
+                  value="${esc(state.adminSearchQuery)}"
+                  oninput="dispatch('ADMIN_SEARCH', this.value)"
+                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
+                />
+              </div>
+            </div>
+
+            ${state.isDbLoading ? `
+              <div style="text-align:center;padding:36px;text-align:center;">
+                <div class="spinner" style="margin:0 auto 10px;"></div>
+                <p style="font-size:12px;color:#888;">Contacting database...</p>
+              </div>
+            ` : adminFiltered.length === 0 ? `
+              <p style="padding:24px;font-size:13px;color:#999;text-align:center;">
+                ${state.packages.length === 0 ? 'Directory empty. Create catalog entries using the panel on the left.' : 'No departures match your search query.'}
+              </p>
+            ` : `
+              <div style="overflow-x:auto; width:100%;">
+                <table style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;width:45px;padding:10px 12px;">#</th>
+                      <th style="text-align:left;">Destination Info</th>
+                      <th style="text-align:left;">Duration</th>
+                      <th style="text-align:left;">Focus Highlights</th>
+                      <th style="text-align:right;">Operations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${adminFiltered.map((pkg, index) => `
+                      <tr class="${state.editingId === pkg.id ? 'editing-row' : ''}">
+                        <td style="font-weight:600;color:var(--gold);width:45px;padding:10px 12px;">${index + 1}</td>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <img src="${esc(pkg.image)}" style="width:34px;height:34px;border-radius:4px;object-fit:cover;background:#e8e4dc;flex-shrink:0;" onerror="this.style.background='#e8e4dc';this.style.visibility='hidden'" />
+                            <div>
+                              <div style="font-weight:600;font-size:12px;color:var(--navy);">${esc(pkg.title)}</div>
+                              <a href="${esc(pkg.pdfUrl)}" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none;font-weight:500;">Itinerary Link ↗</a>
+                            </div>
+                          </div>
+                        </td>
+                        <td style="color:#555;font-size:12px;white-space:nowrap;">${esc(pkg.duration)}</td>
+                        <td>
+                          ${pkg.highlight ? `<span style="font-size:9px;font-weight:600;letter-spacing:0.04em;background:#f5f3ef;border:1px solid #ded9cf;color:var(--navy);padding:2px 8px;border-radius:4px;">${esc(pkg.highlight)}</span>` : '<span style="color:#ccc;font-size:11px;">—</span>'}
+                        </td>
+                        <td style="text-align:right;padding:10px 12px;">
+                          <div style="display:flex;justify-content:flex-end;gap:4px;">
+                            <button class="btn-edit" style="padding:4px 8px;font-size:10px;" onclick="handleStartEdit('${esc(pkg.id)}')">Edit</button>
+                            <button class="btn-danger" style="padding:4px 8px;font-size:10px;" onclick="triggerDeleteConfirmation('${esc(pkg.id)}')">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
+  // ── ADMIN: ACCESS LIST (AGENTS) ────────────────────────────────────────────
+  function renderAdminAgents() {
+    const q = (state.agentSearchQuery || '').toLowerCase();
+    const filtered = state.agents.filter(a => !q || a.agtCode.toLowerCase().includes(q));
+
+    return `
+      <div class="flex flex-col lg:flex-row gap-6 items-start">
+
+        <!-- Sticky Form Panel -->
+        <div class="lg:sticky lg:top-[74px] w-full lg:max-w-[320px] flex-shrink-0" style="background:#fff;border-radius:8px;border:1px solid #ede9e1;padding:18px;">
+          <div style="margin-bottom:14px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:#f5f3ef;color:#666;padding:3px 8px;border-radius:3px;">
+              ${state.editingAgentId ? 'Edit Access' : 'Grant Access'}
+            </span>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:6px 0 0;">
+              ${state.editingAgentId ? 'Edit Agent Credentials' : 'Add Agent Access'}
+            </h3>
+          </div>
+
+          ${state.agentFormError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentFormError)}</div>` : ''}
+          ${state.agentFormSuccess ? `<div class="success-box" style="margin-bottom:12px;">${esc(state.agentFormSuccess)}</div>` : ''}
+
+          <form onsubmit="handleAgentSubmit(event)" style="display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <label class="field-label" for="f-agt-code">AGT Code *</label>
+              <input class="field" id="f-agt-code" type="text" style="text-transform:uppercase;" placeholder="e.g. AGT1024" value="${esc(state.agentDraft.agtCode)}" required />
+            </div>
+            <div>
+              <label class="field-label" for="f-agt-password">Password *</label>
+              <input class="field" id="f-agt-password" type="text" placeholder="Set a password" value="${esc(state.agentDraft.password)}" required />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px;">
+              <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:9px;border-radius:4px;">
+                ${state.editingAgentId ? 'Save Changes' : 'Grant Access'}
+              </button>
+              ${state.editingAgentId ? `
+                <button type="button" class="btn-outline" onclick="handleAgentCancelEdit()" style="width:100%;justify-content:center;padding:8px;">
+                  Cancel
+                </button>
+              ` : ''}
+            </div>
+          </form>
+        </div>
+
+        <!-- Access List Directory -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:20px;width:100%;">
+
+          <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+            <div style="padding:14px 18px;border-bottom:1px solid #ede9e1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+              <div>
+                <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:0;">Agent Access List</h3>
+                <span style="font-size:11px;color:#888;font-weight:500;">
+                  ${filtered.length} of ${state.agents.length} agents
+                </span>
+              </div>
+
+              <div style="position:relative; width:100%; max-width:240px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search AGT code..."
+                  value="${esc(state.agentSearchQuery)}"
+                  oninput="dispatch('AGENT_SEARCH', this.value)"
+                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
+                />
+              </div>
+            </div>
+
+            ${!state.agentsLoaded ? `
+              <div style="text-align:center;padding:36px;">
+                <div class="spinner" style="margin:0 auto 10px;"></div>
+                <p style="font-size:12px;color:#888;">Loading access list...</p>
+              </div>
+            ` : filtered.length === 0 ? `
+              <p style="padding:24px;font-size:13px;color:#999;text-align:center;">
+                ${state.agents.length === 0 ? 'No agents yet. Grant access using the panel on the left.' : 'No agents match your search query.'}
+              </p>
+            ` : `
+              <div style="overflow-x:auto; width:100%;">
+                <table style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;width:45px;padding:10px 12px;">#</th>
+                      <th style="text-align:left;">AGT Code</th>
+                      <th style="text-align:left;">Password</th>
+                      <th style="text-align:right;">Operations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${filtered.map((agent, index) => {
+                      const revealed = state.revealedAgentIds.includes(agent.id);
+                      return `
+                      <tr class="${state.editingAgentId === agent.id ? 'editing-row' : ''}">
+                        <td style="font-weight:600;color:var(--gold);width:45px;padding:10px 12px;">${index + 1}</td>
+                        <td style="font-weight:600;font-size:12px;color:var(--navy);">${esc(agent.agtCode)}</td>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-family:monospace;font-size:12px;color:#555;">${revealed ? esc(agent.password) : '••••••••'}</span>
+                            <button onclick="dispatch('TOGGLE_REVEAL_PASSWORD', '${esc(agent.id)}')" style="background:none;border:none;cursor:pointer;color:#aaa;padding:2px;display:flex;" title="${revealed ? 'Hide' : 'Show'} password">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${revealed ? '<path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.62 21.62 0 015.06-6.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-3.22 4.5M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}</svg>
+                            </button>
+                          </div>
+                        </td>
+                        <td style="text-align:right;padding:10px 12px;">
+                          <div style="display:flex;justify-content:flex-end;gap:4px;">
+                            <button class="btn-edit" style="padding:4px 8px;font-size:10px;" onclick="handleAgentStartEdit('${esc(agent.id)}')">Edit</button>
+                            <button class="btn-danger" style="padding:4px 8px;font-size:10px;" onclick="triggerAgentDeleteConfirmation('${esc(agent.id)}')">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
+  // ─── CUSTOM CONFIRMATION MODAL ──────────────────────────────────────────────
+  function renderDeleteConfirmationModal() {
+    const target = state.deleteTarget;
+    const isAgent = target.type === 'agent';
+
+    let itemLabel = 'this item';
+    let bodyText = 'This action instantly removes the item.';
+    let headerTitle = 'Delete Specs';
+
+    if (isAgent) {
+      const agent = state.agents.find(a => a.id === target.id);
+      itemLabel = agent ? agent.agtCode : 'this agent';
+      bodyText = 'This immediately revokes hotel access for this AGT code.';
+      headerTitle = 'Revoke Access';
+    } else {
+      const pkg = state.packages.find(p => p.id === target.id);
+      itemLabel = pkg ? pkg.title : 'this departure';
+      bodyText = 'This action instantly removes the package from customer schedules.';
+      headerTitle = 'Delete Specs';
+    }
+
+    return `
+    <div class="modal-backdrop" onclick="if(event.target===this)window.cancelDelete()">
+      <div class="modal-box" style="background:#fff;width:100%;max-width:350px;border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.3);">
+        
+        <div style="background:#991b1b;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:#fff;margin:0;">${headerTitle}</h3>
+          <button onclick="window.cancelDelete()" style="background:rgba(255,255,255,0.12);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+
+        <div style="padding:24px 20px;text-align:center;">
+          <div style="width:40px;height:40px;background:#fff1f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <p style="font-size:13px;color:#0a1628;margin:0 0 6px;font-weight:600;">
+            Confirm removal of <span style="color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:16px;">${esc(itemLabel)}</span>?
+          </p>
+          <p style="font-size:11px;color:#666;line-height:1.5;margin:0 0 18px;">
+            ${bodyText}
+          </p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-outline" onclick="window.cancelDelete()" style="flex:1;padding:8px;">Cancel</button>
+            <button class="btn-gold" onclick="window.confirmDelete()" style="flex:1;background:#dc2626;color:#fff;border:none;justify-content:center;padding:8px;">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ─── BOOT ──────────────────────────────────────────────────────────────────
+  window.addEventListener('popstate', render);
+
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('back-to-top');
+    if (btn) {
+      if (window.scrollY > 300) {
+        btn.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+        btn.classList.add('opacity-100', 'translate-y-0');
+      } else {
+        btn.classList.remove('opacity-100', 'translate-y-0');
+        btn.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+      }
+    }
+  });
+
+  // Watchdog configuration to load local database if Firebase handshake fails
+  setTimeout(() => {
+    if (state.isDbLoading) {
+      console.warn("Database connection timed out. Booting local offline sandbox.");
+      loadLocalFallback();
+    }
+  }, 3000);
+
+  window.onload = async () => {
+    await initAuth();
+    setupListeners();
+    // Restore agent session if previously logged in
+    if (state.agentUnlocked) {
+      fetchFolderSheets();
+    }
+
+    render();
+  };
+</script>
+</body>
+</html>
