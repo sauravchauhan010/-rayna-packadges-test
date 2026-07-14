@@ -669,7 +669,7 @@ import { SHEETS_ID } from './config.js';
   function renderAdminLogs() {
     const q = (state.adminLogSearchQuery || '').toLowerCase();
     const filtered = state.agentLogs.filter(l =>
-      !q || (l.companyName || '').toLowerCase().includes(q) || (l.agentCode || '').toLowerCase().includes(q)
+      !q || (l.companyName || '').toLowerCase().includes(q) || (l.agentCode || '').toLowerCase().includes(q) || (l.location || '').toLowerCase().includes(q)
     );
 
     function formatTimestamp(iso) {
@@ -696,7 +696,7 @@ import { SHEETS_ID } from './config.js';
               </svg>
               <input
                 type="text"
-                placeholder="Search company or agent code..."
+                placeholder="Search company, agent code, or location..."
                 value="${esc(state.adminLogSearchQuery)}"
                 oninput="dispatch('ADMIN_LOG_SEARCH', this.value)"
                 style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
@@ -725,6 +725,7 @@ import { SHEETS_ID } from './config.js';
                   <th style="text-align:left;width:45px;padding:10px 12px;">#</th>
                   <th style="text-align:left;">Company</th>
                   <th style="text-align:left;">Agent Code</th>
+                  <th style="text-align:left;">Location</th>
                   <th style="text-align:left;">Signed In At</th>
                 </tr>
               </thead>
@@ -734,6 +735,7 @@ import { SHEETS_ID } from './config.js';
                     <td style="font-weight:600;color:var(--gold);width:45px;padding:10px 12px;">${index + 1}</td>
                     <td style="font-weight:600;font-size:12px;color:var(--navy);">${esc(log.companyName)}</td>
                     <td style="font-size:12px;color:#555;font-family:monospace;letter-spacing:0.03em;">${esc(log.agentCode)}</td>
+                    <td style="font-size:12px;color:#555;">${esc(log.location || 'Unknown')}</td>
                     <td style="font-size:12px;color:#555;">${formatTimestamp(log.loggedAt)}</td>
                   </tr>
                 `).join('')}
