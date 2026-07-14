@@ -28,7 +28,8 @@ agent access list.
 │   └── main.js             Entry point — wires everything up, runs the boot sequence
 ├── api/
 │   ├── login.js            Serverless function: admin login (checks env vars)
-│   └── drive-folder.js     Serverless function: proxies the Drive files.list call
+│   ├── drive-folder.js     Serverless function: proxies the Drive files.list call
+│   └── agent-location.js   Serverless function: returns approximate city/country from Vercel's IP geolocation headers
 ├── package.json
 ├── .env.example
 └── README.md
@@ -83,6 +84,10 @@ environment variables rather than however your existing one checks them.
 - Agent login is plain agent-code + password, checked against the `agents`
   collection — no Firebase Authentication sign-in method needs enabling for
   this.
+- Login location (city/country) comes from Vercel's automatic IP
+  geolocation request headers via `api/agent-location.js` — no API key, no
+  configuration, and no cost. It only works once actually deployed on
+  Vercel; locally via `vercel dev` it will show "Unknown".
 
 ## Security note
 
