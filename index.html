@@ -710,7 +710,7 @@
       }
     } catch (err) {
       console.error('Email link sign-in error:', err);
-      state.agentLoginError = 'That sign-in link is invalid or has expired. Please request a new one.';
+      state.agentLoginError = 'That sign-in link has already been used or has expired. Please request a new one.';
       state.activeView = 'hotels';
       state.showAgentLoginForm = true;
     }
@@ -2031,8 +2031,16 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
     await initAuth();
     setupListeners();
 
-    // If the agent just clicked their emailed sign-in link, complete that flow
-    if (isFirebaseReady && auth && isSignInWithEmailLink(auth, window.location.href)) {
+    const hasEmailLink = isFirebaseReady && auth && isSignInWithEmailLink(auth, window.location.href);
+
+    if (hasEmailLink && state.agentUnlocked) {
+      // Already signed in this session (link opened/clicked again) — don't re-redeem the
+      // one-time code, just clean the URL and drop the agent straight into private files.
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+      state.activeView = 'hotels';
+      if (!state.folderFetched) fetchFolderSheets();
+    } else if (hasEmailLink) {
       await completeAgentEmailLinkSignIn();
     } else if (state.agentUnlocked) {
       // Restore agent session if previously logged in
