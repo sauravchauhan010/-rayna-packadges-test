@@ -40,7 +40,7 @@ export async function deleteAgent(id) {
   }
   if (state.editingAgentId === id) {
     state.editingAgentId = null;
-    state.agentDraft = { companyName: '', email: '' };
+    state.agentDraft = { companyName: '', agentCode: '', password: '' };
   }
 }
 
@@ -48,7 +48,7 @@ window.handleAgentStartEdit = (id) => {
   const agent = state.agents.find(a => a.id === id);
   if (!agent) return;
   state.editingAgentId = id;
-  state.agentDraft = { companyName: agent.companyName || '', email: agent.email || '' };
+  state.agentDraft = { companyName: agent.companyName || '', agentCode: agent.agentCode || '', password: agent.password || '' };
   state.agentFormError = '';
   state.agentFormSuccess = '';
   render();
@@ -56,7 +56,7 @@ window.handleAgentStartEdit = (id) => {
 
 window.handleAgentCancelEdit = () => {
   state.editingAgentId = null;
-  state.agentDraft = { companyName: '', email: '' };
+  state.agentDraft = { companyName: '', agentCode: '', password: '' };
   state.agentFormError = '';
   state.agentFormSuccess = '';
   render();
@@ -68,27 +68,23 @@ window.handleAgentSubmit = async (e) => {
   state.agentFormSuccess = '';
 
   const companyName = document.getElementById('f-agt-company')?.value?.trim();
-  const emailRaw     = document.getElementById('f-agt-email')?.value?.trim();
+  const agentCodeRaw = document.getElementById('f-agt-agentcode')?.value?.trim();
+  const password      = document.getElementById('f-agt-password')?.value; // no trim — password chars are intentional
 
-  if (!companyName || !emailRaw) {
-    state.agentFormError = 'Company name and email are both required.';
+  if (!companyName || !agentCodeRaw || !password) {
+    state.agentFormError = 'Company name, agent code, and password are all required.';
     render(); return;
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
-    state.agentFormError = 'Please enter a valid email address.';
-    render(); return;
-  }
+  const agentCode = agentCodeRaw;
 
-  const email = emailRaw.toLowerCase();
-
-  const duplicate = state.agents.find(a => (a.email || '').toLowerCase() === email && a.id !== state.editingAgentId);
+  const duplicate = state.agents.find(a => (a.agentCode || '') === agentCode && a.id !== state.editingAgentId);
   if (duplicate) {
-    state.agentFormError = `Email "${email}" already has access. Choose a different email or edit the existing entry.`;
+    state.agentFormError = `Agent code "${agentCode}" is already in use. Choose a different code or edit the existing entry.`;
     render(); return;
   }
 
-  const payload = { companyName, email, createdAt: new Date().toISOString() };
+  const payload = { companyName, agentCode, password, createdAt: new Date().toISOString() };
 
   if (!isFirebaseReady || !db) {
     if (state.editingAgentId) {
@@ -99,7 +95,7 @@ window.handleAgentSubmit = async (e) => {
     saveLocal('rayna_agents_v1', state.agents);
     state.agentFormSuccess = state.editingAgentId ? 'Access updated.' : 'Agent access granted.';
     state.editingAgentId = null;
-    state.agentDraft = { companyName: '', email: '' };
+    state.agentDraft = { companyName: '', agentCode: '', password: '' };
     render(); return;
   }
 
@@ -114,7 +110,7 @@ window.handleAgentSubmit = async (e) => {
       state.agentFormSuccess = 'Agent access granted successfully.';
     }
     state.editingAgentId = null;
-    state.agentDraft = { companyName: '', email: '' };
+    state.agentDraft = { companyName: '', agentCode: '', password: '' };
   } catch (err) {
     state.agentFormError = 'Database error: ' + err.message;
   }
