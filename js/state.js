@@ -27,16 +27,13 @@ export const state = {
   folderSearch: '',
   hotelSearch: '',
 
-  // Agent (email link) login
-  agents: [],                                             // [{id, companyName, email, createdAt}]
+  // Agent (agent code + password) login — no email, no Firebase sending, no volume limits
+  agents: [],                                             // [{id, companyName, agentCode, password, createdAt}]
   agentsLoaded: false,
-  agentUnlocked: localStorage.getItem('rayna_agent_email') || '',
+  agentUnlocked: localStorage.getItem('rayna_agent_code') || '',
   agentCompanyName: localStorage.getItem('rayna_agent_company') || '',
   agentLoginError: '',
   agentLoginLoading: false,
-  agentLinkSent: false,
-  agentVerifyingLink: false,
-  agentNeedsEmailConfirm: false,
   showAgentLoginForm: false,
   folderSheets: [],
   folderLoading: false,
@@ -51,7 +48,7 @@ export const state = {
   agentFormError: '',
   agentFormSuccess: '',
   editingAgentId: null,
-  agentDraft: { companyName: '', email: '' },
+  agentDraft: { companyName: '', agentCode: '', password: '' },
 
   // File preview modal
   previewFile: null,
