@@ -1,5 +1,6 @@
 import { isFirebaseReady, db } from './firebase.js';
 import { state, esc, pkgJson } from './state.js';
+import { SHEETS_ID } from './config.js';
 
   function fileIcon(mimeType) {
     if (mimeType === 'application/vnd.google-apps.spreadsheet') return { icon: '🟢', label: 'Google Sheet', color: '#16a34a' };
