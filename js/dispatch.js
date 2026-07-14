@@ -52,6 +52,17 @@ window.dispatch = (action, payload) => {
     case 'ADMIN_LOG_SEARCH':
       state.adminLogSearchQuery = payload;
       break;
+    case 'ADMIN_LOG_DATE_FROM':
+      state.adminLogDateFrom = payload;
+      break;
+    case 'ADMIN_LOG_DATE_TO':
+      state.adminLogDateTo = payload;
+      break;
+    case 'ADMIN_LOG_CLEAR_FILTERS':
+      state.adminLogSearchQuery = '';
+      state.adminLogDateFrom = '';
+      state.adminLogDateTo = '';
+      break;
     case 'ZOOM_OUT':
       state.previewZoom = Math.max(50, state.previewZoom - 25);
       break;
