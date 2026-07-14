@@ -668,9 +668,20 @@ import { SHEETS_ID } from './config.js';
 
   function renderAdminLogs() {
     const q = (state.adminLogSearchQuery || '').toLowerCase();
-    const filtered = state.agentLogs.filter(l =>
-      !q || (l.companyName || '').toLowerCase().includes(q) || (l.agentCode || '').toLowerCase().includes(q) || (l.location || '').toLowerCase().includes(q)
-    );
+    const fromDate = state.adminLogDateFrom ? new Date(state.adminLogDateFrom + 'T00:00:00') : null;
+    const toDate = state.adminLogDateTo ? new Date(state.adminLogDateTo + 'T23:59:59') : null;
+
+    const filtered = state.agentLogs.filter(l => {
+      const matchesSearch = !q || (l.companyName || '').toLowerCase().includes(q) || (l.agentCode || '').toLowerCase().includes(q) || (l.location || '').toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      const loggedAt = new Date(l.loggedAt || 0);
+      if (fromDate && loggedAt < fromDate) return false;
+      if (toDate && loggedAt > toDate) return false;
+      return true;
+    });
+
+    const hasDateFilter = !!(state.adminLogDateFrom || state.adminLogDateTo);
 
     function formatTimestamp(iso) {
       if (!iso) return '—';
@@ -685,7 +696,7 @@ import { SHEETS_ID } from './config.js';
           <div>
             <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:0;">Agent Login Logs</h3>
             <span style="font-size:11px;color:#888;font-weight:500;">
-              ${filtered.length} of ${state.agentLogs.length} logins recorded
+              ${filtered.length} of ${state.agentLogs.length} logins recorded · logs older than 30 days are removed automatically
             </span>
           </div>
 
@@ -706,6 +717,22 @@ import { SHEETS_ID } from './config.js';
               <button class="btn-danger" style="padding:6px 12px;font-size:10px;" onclick="triggerClearLogsConfirmation()">Clear All</button>
             ` : ''}
           </div>
+        </div>
+
+        <div style="padding:12px 18px;border-bottom:1px solid #ede9e1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#faf8f4;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label class="field-label" style="margin:0;">From</label>
+            <input type="date" value="${esc(state.adminLogDateFrom)}" onchange="dispatch('ADMIN_LOG_DATE_FROM', this.value)"
+              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label class="field-label" style="margin:0;">To</label>
+            <input type="date" value="${esc(state.adminLogDateTo)}" onchange="dispatch('ADMIN_LOG_DATE_TO', this.value)"
+              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
+          </div>
+          ${hasDateFilter || state.adminLogSearchQuery ? `
+            <button onclick="dispatch('ADMIN_LOG_CLEAR_FILTERS')" style="font-size:10px;font-weight:600;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;">✕ Clear Filters</button>
+          ` : ''}
         </div>
 
         ${!state.agentLogsLoaded ? `
