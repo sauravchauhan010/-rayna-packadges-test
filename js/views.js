@@ -293,48 +293,26 @@ import { SHEETS_ID } from './config.js';
 
       ${state.showAgentLoginForm ? `
         <div style="max-width:340px;margin:0 0 20px;background:#fff;border:1px solid #ede9e1;border-radius:8px;padding:18px;">
-          ${state.agentNeedsEmailConfirm ? `
-            <div style="margin-bottom:12px;">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Confirm Your Email</h3>
-              <p style="font-size:11px;color:#888;margin:0;">Please re-enter your email to confirm this sign-in link.</p>
+          <div style="margin-bottom:12px;">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Agent Access</h3>
+            <p style="font-size:11px;color:#888;margin:0;">Enter the agent code and password Rayna Tours shared with you.</p>
+          </div>
+          ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label class="field-label" for="agent-code-input">Agent Code</label>
+              <input class="field" id="agent-code-input" type="text" placeholder="e.g. RT-BLUEHORIZON"
+                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
             </div>
-            ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div>
-                <label class="field-label" for="agent-confirm-email-input">Email</label>
-                <input class="field" id="agent-confirm-email-input" type="email" placeholder="you@company.com"
-                  onkeydown="if(event.key==='Enter')handleConfirmAgentEmail()"/>
-              </div>
-              <button onclick="handleConfirmAgentEmail()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;">
-                Confirm & Sign In
-              </button>
+            <div>
+              <label class="field-label" for="agent-password-input">Password</label>
+              <input class="field" id="agent-password-input" type="password" placeholder="Enter your password"
+                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
             </div>
-          ` : state.agentLinkSent ? `
-            <div style="text-align:center;padding:6px 0;">
-              <div style="width:40px;height:40px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
-              </div>
-              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 6px;">Check Your Inbox</h3>
-              <p style="font-size:12px;color:#666;line-height:1.5;margin:0;">We've sent a sign-in link to your email. Open it on this device to access your private hotel files.</p>
-              <button onclick="dispatch('TOGGLE_AGENT_LOGIN_FORM')" style="margin-top:14px;font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Close</button>
-            </div>
-          ` : `
-            <div style="margin-bottom:12px;">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Agent Access</h3>
-              <p style="font-size:11px;color:#888;margin:0;">Enter your email and we'll send you a one-time sign-in link — no password needed.</p>
-            </div>
-            ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div>
-                <label class="field-label" for="agent-email-input">Email</label>
-                <input class="field" id="agent-email-input" type="email" placeholder="you@company.com"
-                  onkeydown="if(event.key==='Enter')handleSendAgentLink()"/>
-              </div>
-              <button onclick="handleSendAgentLink()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;" ${state.agentLoginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
-                ${state.agentLoginLoading ? 'Sending…' : 'Send Sign-In Link'}
-              </button>
-            </div>
-          `}
+            <button onclick="handleAgentLogin()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;" ${state.agentLoginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
+              ${state.agentLoginLoading ? 'Checking…' : 'Sign In'}
+            </button>
+          </div>
         </div>
       ` : ''}
 
@@ -587,7 +565,7 @@ import { SHEETS_ID } from './config.js';
 
   function renderAdminAgents() {
     const q = (state.agentSearchQuery || '').toLowerCase();
-    const filtered = state.agents.filter(a => !q || (a.companyName || '').toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q));
+    const filtered = state.agents.filter(a => !q || (a.companyName || '').toLowerCase().includes(q) || (a.agentCode || '').toLowerCase().includes(q));
 
     return `
       <div class="flex flex-col lg:flex-row gap-6 items-start">
@@ -602,7 +580,7 @@ import { SHEETS_ID } from './config.js';
               ${state.editingAgentId ? 'Edit Agent Access' : 'Add Agent Access'}
             </h3>
             <p style="font-size:11px;color:#888;margin:6px 0 0;line-height:1.5;">
-              Agents sign in with their email — no password to manage. They'll receive a one-time sign-in link.
+              Agents sign in with an Agent Code + Password that you set here — share both with them yourself (WhatsApp, email, etc.).
             </p>
           </div>
 
@@ -615,8 +593,12 @@ import { SHEETS_ID } from './config.js';
               <input class="field" id="f-agt-company" type="text" placeholder="e.g. Blue Horizon Travel" value="${esc(state.agentDraft.companyName)}" required />
             </div>
             <div>
-              <label class="field-label" for="f-agt-email">Agent Email *</label>
-              <input class="field" id="f-agt-email" type="email" placeholder="agent@company.com" value="${esc(state.agentDraft.email)}" required />
+              <label class="field-label" for="f-agt-agentcode">Agent Code *</label>
+              <input class="field" id="f-agt-agentcode" type="text" placeholder="e.g. RT-BLUEHORIZON" value="${esc(state.agentDraft.agentCode)}" required />
+            </div>
+            <div>
+              <label class="field-label" for="f-agt-password">Password *</label>
+              <input class="field" id="f-agt-password" type="text" placeholder="Set a password for this agent" value="${esc(state.agentDraft.password)}" required />
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px;">
               <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:9px;border-radius:4px;">
@@ -649,7 +631,7 @@ import { SHEETS_ID } from './config.js';
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search company or email..."
+                  placeholder="Search company or agent code..."
                   value="${esc(state.agentSearchQuery)}"
                   oninput="dispatch('AGENT_SEARCH', this.value)"
                   style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
@@ -673,7 +655,8 @@ import { SHEETS_ID } from './config.js';
                     <tr>
                       <th style="text-align:left;width:45px;padding:10px 12px;">#</th>
                       <th style="text-align:left;">Company</th>
-                      <th style="text-align:left;">Email</th>
+                      <th style="text-align:left;">Agent Code</th>
+                      <th style="text-align:left;">Password</th>
                       <th style="text-align:right;">Operations</th>
                     </tr>
                   </thead>
@@ -682,7 +665,8 @@ import { SHEETS_ID } from './config.js';
                       <tr class="${state.editingAgentId === agent.id ? 'editing-row' : ''}">
                         <td style="font-weight:600;color:var(--gold);width:45px;padding:10px 12px;">${index + 1}</td>
                         <td style="font-weight:600;font-size:12px;color:var(--navy);">${esc(agent.companyName)}</td>
-                        <td style="font-size:12px;color:#555;">${esc(agent.email)}</td>
+                        <td style="font-size:12px;color:#555;font-family:monospace;letter-spacing:0.03em;">${esc(agent.agentCode)}</td>
+                        <td style="font-size:12px;color:#555;font-family:monospace;letter-spacing:0.03em;">${esc(agent.password)}</td>
                         <td style="text-align:right;padding:10px 12px;">
                           <div style="display:flex;justify-content:flex-end;gap:4px;">
                             <button class="btn-edit" style="padding:4px 8px;font-size:10px;" onclick="handleAgentStartEdit('${esc(agent.id)}')">Edit</button>
