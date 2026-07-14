@@ -307,7 +307,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { getFirestore, collection, doc, addDoc, deleteDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   // ─── INITIAL HOISTING FOR ROBUST LOAD ──────────────────────────────────────
@@ -425,12 +425,15 @@
     activeView: sessionStorage.getItem('rayna_view') || 'packages',   // 'packages' | 'hotels'
     folderSearch: '',        // search query for agent file list
     hotelSearch: '',         // search query for hotel sheet
-    // ── Agent (AGT code) login ──
-    agents: [],                                            // [{id, agtCode, password, createdAt}] from Firestore
+    // ── Agent (email link) login ──
+    agents: [],                                            // [{id, companyName, email, createdAt}] from Firestore
     agentsLoaded: false,
-    agentUnlocked: sessionStorage.getItem('rayna_agent') || '',  // holds the logged-in AGT code, '' if locked
+    agentUnlocked: sessionStorage.getItem('rayna_agent_email') || '',  // holds the logged-in agent email, '' if locked
+    agentCompanyName: sessionStorage.getItem('rayna_agent_company') || '',
     agentLoginError: '',
     agentLoginLoading: false,
+    agentLinkSent: false,        // true once the sign-in link email has been sent, shows "check your inbox"
+    agentNeedsEmailConfirm: false, // true if returning via link on a different device/browser and email must be re-entered
     showAgentLoginForm: false,
     folderSheets: [],       // list of {id, name, mimeType, webViewLink} from Drive folder
     folderLoading: false,
@@ -444,8 +447,7 @@
     agentFormError: '',
     agentFormSuccess: '',
     editingAgentId: null,
-    agentDraft: { agtCode: '', password: '' },
-    revealedAgentIds: [],   // agent ids whose password is currently shown in plaintext in the admin table
+    agentDraft: { companyName: '', email: '' },
     // ── File preview modal ──
     previewFile: null,      // {id, name, mimeType} or null
     previewZoom: 100,        // zoom % for modal
@@ -538,7 +540,7 @@
         loadLocalFallback();
       });
 
-      // Access List (agents / AGT codes) — synced live so admin edits apply everywhere instantly
+      // Access List (agents / company + email) — synced live so admin edits apply everywhere instantly
       const agentsCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'agents');
       onSnapshot(agentsCol, (snap) => {
         const list = [];
@@ -609,16 +611,28 @@
   // ── Fetch a specific sheet by ID from the folder (used by the preview modal) ──
 
 
-  window.handleAgentLogin = async () => {
-    const codeEl = document.getElementById('agt-code-input');
-    const passEl = document.getElementById('agt-pass-input');
-    const agtCode = (codeEl ? codeEl.value : '').trim().toUpperCase();
-    const password = passEl ? passEl.value : '';
+  // ── Agent login via Firebase Email Link sign-in ────────────────────────────
+  function agentActionCodeSettings() {
+    return {
+      url: window.location.origin + window.location.pathname,
+      handleCodeInApp: true
+    };
+  }
+
+  window.handleSendAgentLink = async () => {
+    const emailEl = document.getElementById('agent-email-input');
+    const email = (emailEl ? emailEl.value : '').trim().toLowerCase();
 
     state.agentLoginError = '';
 
-    if (!agtCode || !password) {
-      state.agentLoginError = 'Please enter both your AGT code and password.';
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      state.agentLoginError = 'Please enter a valid email address.';
+      render();
+      return;
+    }
+
+    if (!isFirebaseReady || !auth) {
+      state.agentLoginError = 'Agent login requires cloud mode and is unavailable right now. Please try again shortly.';
       render();
       return;
     }
@@ -633,21 +647,96 @@
       attempts++;
     }
 
-    const match = state.agents.find(a => (a.agtCode || '').toUpperCase() === agtCode && a.password === password);
-
-    state.agentLoginLoading = false;
+    const match = state.agents.find(a => (a.email || '').toLowerCase() === email);
 
     if (!match) {
-      state.agentLoginError = 'Invalid AGT code or password. Please check your credentials and try again.';
+      state.agentLoginLoading = false;
+      state.agentLoginError = 'This email is not on our access list. Please contact Rayna Tours for access.';
       render();
       return;
     }
 
-    state.agentUnlocked = agtCode;
-    state.agentLoginError = '';
-    sessionStorage.setItem('rayna_agent', agtCode);
+    try {
+      await sendSignInLinkToEmail(auth, email, agentActionCodeSettings());
+      window.localStorage.setItem('rayna_email_for_signin', email);
+      window.localStorage.setItem('rayna_company_for_signin', match.companyName || '');
+      state.agentLinkSent = true;
+      state.agentLoginError = '';
+    } catch (err) {
+      console.error('Send sign-in link error:', err);
+      state.agentLoginError = 'Could not send sign-in link: ' + err.message;
+    }
+
+    state.agentLoginLoading = false;
     render();
-    await fetchFolderSheets();
+  };
+
+  // Handles the return trip when the agent clicks the emailed sign-in link
+  async function completeAgentEmailLinkSignIn() {
+    if (!isFirebaseReady || !auth) return;
+    if (!isSignInWithEmailLink(auth, window.location.href)) return;
+
+    let email = window.localStorage.getItem('rayna_email_for_signin');
+
+    if (!email) {
+      // Link opened on a different device/browser — ask the agent to confirm their email
+      state.agentNeedsEmailConfirm = true;
+      state.activeView = 'hotels';
+      state.showAgentLoginForm = true;
+      render();
+      return;
+    }
+
+    try {
+      await signInWithEmailLink(auth, email, window.location.href);
+
+      // Wait briefly for the agents list to load so we can validate + fetch company name
+      let attempts = 0;
+      while (!state.agentsLoaded && attempts < 20) {
+        await new Promise(r => setTimeout(r, 150));
+        attempts++;
+      }
+      const match = state.agents.find(a => (a.email || '').toLowerCase() === email.toLowerCase());
+
+      if (!match) {
+        state.agentLoginError = 'This email is not on our access list. Please contact Rayna Tours for access.';
+      } else {
+        state.agentUnlocked = email;
+        state.agentCompanyName = match.companyName || '';
+        sessionStorage.setItem('rayna_agent_email', email);
+        sessionStorage.setItem('rayna_agent_company', state.agentCompanyName);
+        state.activeView = 'hotels';
+        await fetchFolderSheets();
+      }
+    } catch (err) {
+      console.error('Email link sign-in error:', err);
+      state.agentLoginError = 'That sign-in link is invalid or has expired. Please request a new one.';
+      state.activeView = 'hotels';
+      state.showAgentLoginForm = true;
+    }
+
+    window.localStorage.removeItem('rayna_email_for_signin');
+    window.localStorage.removeItem('rayna_company_for_signin');
+
+    // Clean the sign-in params out of the URL bar
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+
+    render();
+  }
+
+  window.handleConfirmAgentEmail = async () => {
+    const emailEl = document.getElementById('agent-confirm-email-input');
+    const email = (emailEl ? emailEl.value : '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      state.agentLoginError = 'Please enter a valid email address.';
+      render();
+      return;
+    }
+    window.localStorage.setItem('rayna_email_for_signin', email);
+    state.agentNeedsEmailConfirm = false;
+    render();
+    await completeAgentEmailLinkSignIn();
   };
 
   window.openPromoFile = (index) => {
@@ -661,13 +750,16 @@
 
 
   window.agentLogout = () => {
-    state.agentUnlocked  = '';
-    state.folderFetched  = false;
-    state.folderSheets   = [];
-    state.activeSheetId  = null;
-    state.activeSheetName= '';
+    state.agentUnlocked   = '';
+    state.agentCompanyName = '';
+    state.folderFetched   = false;
+    state.folderSheets    = [];
+    state.activeSheetId   = null;
+    state.activeSheetName = '';
     state.agentLoginError = '';
-    sessionStorage.removeItem('rayna_agent');
+    state.agentLinkSent   = false;
+    sessionStorage.removeItem('rayna_agent_email');
+    sessionStorage.removeItem('rayna_agent_company');
     render();
   };
 
@@ -732,6 +824,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
       case 'TOGGLE_AGENT_LOGIN_FORM':
         state.showAgentLoginForm = !state.showAgentLoginForm;
         state.agentLoginError = '';
+        state.agentLinkSent = false;
         break;
       case 'SWITCH_ADMIN_SECTION':
         state.adminSection = payload;
@@ -740,12 +833,6 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
       case 'AGENT_SEARCH':
         state.agentSearchQuery = payload;
         break;
-      case 'TOGGLE_REVEAL_PASSWORD': {
-        const idx = state.revealedAgentIds.indexOf(payload);
-        if (idx === -1) state.revealedAgentIds.push(payload);
-        else state.revealedAgentIds.splice(idx, 1);
-        break;
-      }
       case 'ZOOM_OUT':
         state.previewZoom = Math.max(50, state.previewZoom - 25);
         break;
@@ -899,7 +986,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
           await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'agents', id));
         } catch (err) { console.error('Agent delete error:', err); }
       }
-      if (state.editingAgentId === id) { state.editingAgentId = null; state.agentDraft = { agtCode: '', password: '' }; }
+      if (state.editingAgentId === id) { state.editingAgentId = null; state.agentDraft = { companyName: '', email: '' }; }
       state.deleteTarget = null;
       render();
       return;
@@ -927,7 +1014,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
     const agent = state.agents.find(a => a.id === id);
     if (!agent) return;
     state.editingAgentId = id;
-    state.agentDraft = { agtCode: agent.agtCode, password: agent.password };
+    state.agentDraft = { companyName: agent.companyName || '', email: agent.email || '' };
     state.agentFormError = '';
     state.agentFormSuccess = '';
     render();
@@ -935,7 +1022,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
 
   window.handleAgentCancelEdit = () => {
     state.editingAgentId = null;
-    state.agentDraft = { agtCode: '', password: '' };
+    state.agentDraft = { companyName: '', email: '' };
     state.agentFormError = '';
     state.agentFormSuccess = '';
     render();
@@ -946,23 +1033,28 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
     state.agentFormError = '';
     state.agentFormSuccess = '';
 
-    const agtCodeRaw = document.getElementById('f-agt-code')?.value?.trim();
-    const password    = document.getElementById('f-agt-password')?.value;
+    const companyName = document.getElementById('f-agt-company')?.value?.trim();
+    const emailRaw     = document.getElementById('f-agt-email')?.value?.trim();
 
-    if (!agtCodeRaw || !password) {
-      state.agentFormError = 'AGT code and password are both required.';
+    if (!companyName || !emailRaw) {
+      state.agentFormError = 'Company name and email are both required.';
       render(); return;
     }
 
-    const agtCode = agtCodeRaw.toUpperCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+      state.agentFormError = 'Please enter a valid email address.';
+      render(); return;
+    }
 
-    const duplicate = state.agents.find(a => a.agtCode.toUpperCase() === agtCode && a.id !== state.editingAgentId);
+    const email = emailRaw.toLowerCase();
+
+    const duplicate = state.agents.find(a => (a.email || '').toLowerCase() === email && a.id !== state.editingAgentId);
     if (duplicate) {
-      state.agentFormError = `AGT code "${agtCode}" already exists. Choose a different code or edit the existing entry.`;
+      state.agentFormError = `Email "${email}" already has access. Choose a different email or edit the existing entry.`;
       render(); return;
     }
 
-    const payload = { agtCode, password, createdAt: new Date().toISOString() };
+    const payload = { companyName, email, createdAt: new Date().toISOString() };
 
     if (!isFirebaseReady || !db) {
       if (state.editingAgentId) {
@@ -973,7 +1065,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
       saveLocal('rayna_agents_v1', state.agents);
       state.agentFormSuccess = state.editingAgentId ? 'Access updated.' : 'Agent access granted.';
       state.editingAgentId = null;
-      state.agentDraft = { agtCode: '', password: '' };
+      state.agentDraft = { companyName: '', email: '' };
       render(); return;
     }
 
@@ -988,7 +1080,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
         state.agentFormSuccess = 'Agent access granted successfully.';
       }
       state.editingAgentId = null;
-      state.agentDraft = { agtCode: '', password: '' };
+      state.agentDraft = { companyName: '', email: '' };
     } catch (err) {
       state.agentFormError = 'Database error: ' + err.message;
     }
@@ -1403,7 +1495,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
             <p style="font-size:12px;color:#888;margin:0;">Your exclusive access folder.</p>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;">🔓 Agent ${esc(state.agentUnlocked)}</span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;">🔓 ${esc(state.agentCompanyName || state.agentUnlocked)}</span>
             <button onclick="agentLogout()" style="font-size:10px;font-weight:600;color:#aaa;background:none;border:1px solid #ddd;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕ Sign Out</button>
           </div>
         </div>
@@ -1451,26 +1543,48 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
 
       ${state.showAgentLoginForm ? `
         <div style="max-width:340px;margin:0 0 20px;background:#fff;border:1px solid #ede9e1;border-radius:8px;padding:18px;">
-          <div style="margin-bottom:12px;">
-            <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Agent Access</h3>
-            <p style="font-size:11px;color:#888;margin:0;">Sign in with your AGT code to unlock private hotel files.</p>
-          </div>
-          ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div>
-              <label class="field-label" for="agt-code-input">AGT Code</label>
-              <input class="field" id="agt-code-input" type="text" placeholder="e.g. AGT1024" style="text-transform:uppercase;"
-                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
+          ${state.agentNeedsEmailConfirm ? `
+            <div style="margin-bottom:12px;">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Confirm Your Email</h3>
+              <p style="font-size:11px;color:#888;margin:0;">Please re-enter your email to confirm this sign-in link.</p>
             </div>
-            <div>
-              <label class="field-label" for="agt-pass-input">Password</label>
-              <input class="field" id="agt-pass-input" type="password" placeholder="••••••••"
-                onkeydown="if(event.key==='Enter')handleAgentLogin()"/>
+            ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <label class="field-label" for="agent-confirm-email-input">Email</label>
+                <input class="field" id="agent-confirm-email-input" type="email" placeholder="you@company.com"
+                  onkeydown="if(event.key==='Enter')handleConfirmAgentEmail()"/>
+              </div>
+              <button onclick="handleConfirmAgentEmail()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;">
+                Confirm & Sign In
+              </button>
             </div>
-            <button onclick="handleAgentLogin()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;" ${state.agentLoginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
-              ${state.agentLoginLoading ? 'Verifying…' : 'Sign In'}
-            </button>
-          </div>
+          ` : state.agentLinkSent ? `
+            <div style="text-align:center;padding:6px 0;">
+              <div style="width:40px;height:40px;background:#f0fdf4;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M22 6l-10 7L2 6"/><path d="M2 6h20v12H2z"/></svg>
+              </div>
+              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 6px;">Check Your Inbox</h3>
+              <p style="font-size:12px;color:#666;line-height:1.5;margin:0;">We've sent a sign-in link to your email. Open it on this device to access your private hotel files.</p>
+              <button onclick="dispatch('TOGGLE_AGENT_LOGIN_FORM')" style="margin-top:14px;font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Close</button>
+            </div>
+          ` : `
+            <div style="margin-bottom:12px;">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;margin:0 0 3px;">Agent Access</h3>
+              <p style="font-size:11px;color:#888;margin:0;">Enter your email and we'll send you a one-time sign-in link — no password needed.</p>
+            </div>
+            ${state.agentLoginError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentLoginError)}</div>` : ''}
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <label class="field-label" for="agent-email-input">Email</label>
+                <input class="field" id="agent-email-input" type="email" placeholder="you@company.com"
+                  onkeydown="if(event.key==='Enter')handleSendAgentLink()"/>
+              </div>
+              <button onclick="handleSendAgentLink()" class="btn-gold" style="width:100%;justify-content:center;padding:9px;margin-top:2px;" ${state.agentLoginLoading ? 'disabled style="opacity:0.7;cursor:not-allowed;"' : ''}>
+                ${state.agentLoginLoading ? 'Sending…' : 'Send Sign-In Link'}
+              </button>
+            </div>
+          `}
         </div>
       ` : ''}
 
@@ -1721,7 +1835,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
   // ── ADMIN: ACCESS LIST (AGENTS) ────────────────────────────────────────────
   function renderAdminAgents() {
     const q = (state.agentSearchQuery || '').toLowerCase();
-    const filtered = state.agents.filter(a => !q || a.agtCode.toLowerCase().includes(q));
+    const filtered = state.agents.filter(a => !q || (a.companyName || '').toLowerCase().includes(q) || (a.email || '').toLowerCase().includes(q));
 
     return `
       <div class="flex flex-col lg:flex-row gap-6 items-start">
@@ -1733,8 +1847,11 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
               ${state.editingAgentId ? 'Edit Access' : 'Grant Access'}
             </span>
             <h3 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:6px 0 0;">
-              ${state.editingAgentId ? 'Edit Agent Credentials' : 'Add Agent Access'}
+              ${state.editingAgentId ? 'Edit Agent Access' : 'Add Agent Access'}
             </h3>
+            <p style="font-size:11px;color:#888;margin:6px 0 0;line-height:1.5;">
+              Agents sign in with their email — no password to manage. They'll receive a one-time sign-in link.
+            </p>
           </div>
 
           ${state.agentFormError ? `<div class="error-box" style="margin-bottom:12px;">${esc(state.agentFormError)}</div>` : ''}
@@ -1742,12 +1859,12 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
 
           <form onsubmit="handleAgentSubmit(event)" style="display:flex;flex-direction:column;gap:12px;">
             <div>
-              <label class="field-label" for="f-agt-code">AGT Code *</label>
-              <input class="field" id="f-agt-code" type="text" style="text-transform:uppercase;" placeholder="e.g. AGT1024" value="${esc(state.agentDraft.agtCode)}" required />
+              <label class="field-label" for="f-agt-company">Company Name *</label>
+              <input class="field" id="f-agt-company" type="text" placeholder="e.g. Blue Horizon Travel" value="${esc(state.agentDraft.companyName)}" required />
             </div>
             <div>
-              <label class="field-label" for="f-agt-password">Password *</label>
-              <input class="field" id="f-agt-password" type="text" placeholder="Set a password" value="${esc(state.agentDraft.password)}" required />
+              <label class="field-label" for="f-agt-email">Agent Email *</label>
+              <input class="field" id="f-agt-email" type="email" placeholder="agent@company.com" value="${esc(state.agentDraft.email)}" required />
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px;">
               <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:9px;border-radius:4px;">
@@ -1780,7 +1897,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search AGT code..."
+                  placeholder="Search company or email..."
                   value="${esc(state.agentSearchQuery)}"
                   oninput="dispatch('AGENT_SEARCH', this.value)"
                   style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
@@ -1803,26 +1920,17 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
                   <thead>
                     <tr>
                       <th style="text-align:left;width:45px;padding:10px 12px;">#</th>
-                      <th style="text-align:left;">AGT Code</th>
-                      <th style="text-align:left;">Password</th>
+                      <th style="text-align:left;">Company</th>
+                      <th style="text-align:left;">Email</th>
                       <th style="text-align:right;">Operations</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${filtered.map((agent, index) => {
-                      const revealed = state.revealedAgentIds.includes(agent.id);
-                      return `
+                    ${filtered.map((agent, index) => `
                       <tr class="${state.editingAgentId === agent.id ? 'editing-row' : ''}">
                         <td style="font-weight:600;color:var(--gold);width:45px;padding:10px 12px;">${index + 1}</td>
-                        <td style="font-weight:600;font-size:12px;color:var(--navy);">${esc(agent.agtCode)}</td>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-family:monospace;font-size:12px;color:#555;">${revealed ? esc(agent.password) : '••••••••'}</span>
-                            <button onclick="dispatch('TOGGLE_REVEAL_PASSWORD', '${esc(agent.id)}')" style="background:none;border:none;cursor:pointer;color:#aaa;padding:2px;display:flex;" title="${revealed ? 'Hide' : 'Show'} password">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${revealed ? '<path d="M17.94 17.94A10.94 10.94 0 0112 20c-7 0-11-8-11-8a21.62 21.62 0 015.06-6.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a21.6 21.6 0 01-3.22 4.5M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>' : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'}</svg>
-                            </button>
-                          </div>
-                        </td>
+                        <td style="font-weight:600;font-size:12px;color:var(--navy);">${esc(agent.companyName)}</td>
+                        <td style="font-size:12px;color:#555;">${esc(agent.email)}</td>
                         <td style="text-align:right;padding:10px 12px;">
                           <div style="display:flex;justify-content:flex-end;gap:4px;">
                             <button class="btn-edit" style="padding:4px 8px;font-size:10px;" onclick="handleAgentStartEdit('${esc(agent.id)}')">Edit</button>
@@ -1830,8 +1938,7 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
                           </div>
                         </td>
                       </tr>
-                    `;
-                    }).join('')}
+                    `).join('')}
                   </tbody>
                 </table>
               </div>
@@ -1854,8 +1961,8 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
 
     if (isAgent) {
       const agent = state.agents.find(a => a.id === target.id);
-      itemLabel = agent ? agent.agtCode : 'this agent';
-      bodyText = 'This immediately revokes hotel access for this AGT code.';
+      itemLabel = agent ? agent.companyName : 'this agent';
+      bodyText = 'This immediately revokes hotel access for this agent.';
       headerTitle = 'Revoke Access';
     } else {
       const pkg = state.packages.find(p => p.id === target.id);
@@ -1923,8 +2030,12 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
   window.onload = async () => {
     await initAuth();
     setupListeners();
-    // Restore agent session if previously logged in
-    if (state.agentUnlocked) {
+
+    // If the agent just clicked their emailed sign-in link, complete that flow
+    if (isFirebaseReady && auth && isSignInWithEmailLink(auth, window.location.href)) {
+      await completeAgentEmailLinkSignIn();
+    } else if (state.agentUnlocked) {
+      // Restore agent session if previously logged in
       fetchFolderSheets();
     }
 
