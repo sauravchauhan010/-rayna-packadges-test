@@ -428,11 +428,12 @@
     // ── Agent (email link) login ──
     agents: [],                                            // [{id, companyName, email, createdAt}] from Firestore
     agentsLoaded: false,
-    agentUnlocked: sessionStorage.getItem('rayna_agent_email') || '',  // holds the logged-in agent email, '' if locked
-    agentCompanyName: sessionStorage.getItem('rayna_agent_company') || '',
+    agentUnlocked: localStorage.getItem('rayna_agent_email') || '',  // holds the logged-in agent email, '' if locked
+    agentCompanyName: localStorage.getItem('rayna_agent_company') || '',
     agentLoginError: '',
     agentLoginLoading: false,
     agentLinkSent: false,        // true once the sign-in link email has been sent, shows "check your inbox"
+    agentVerifyingLink: false,   // true while completing the emailed sign-in link, shows a full-screen loader
     agentNeedsEmailConfirm: false, // true if returning via link on a different device/browser and email must be re-entered
     showAgentLoginForm: false,
     folderSheets: [],       // list of {id, name, mimeType, webViewLink} from Drive folder
@@ -676,10 +677,14 @@
     if (!isFirebaseReady || !auth) return;
     if (!isSignInWithEmailLink(auth, window.location.href)) return;
 
+    state.agentVerifyingLink = true;
+    render();
+
     let email = window.localStorage.getItem('rayna_email_for_signin');
 
     if (!email) {
       // Link opened on a different device/browser — ask the agent to confirm their email
+      state.agentVerifyingLink = false;
       state.agentNeedsEmailConfirm = true;
       state.activeView = 'hotels';
       state.showAgentLoginForm = true;
@@ -703,8 +708,8 @@
       } else {
         state.agentUnlocked = email;
         state.agentCompanyName = match.companyName || '';
-        sessionStorage.setItem('rayna_agent_email', email);
-        sessionStorage.setItem('rayna_agent_company', state.agentCompanyName);
+        localStorage.setItem('rayna_agent_email', email);
+        localStorage.setItem('rayna_agent_company', state.agentCompanyName);
         state.activeView = 'hotels';
         await fetchFolderSheets();
       }
@@ -722,6 +727,7 @@
     const cleanUrl = window.location.origin + window.location.pathname;
     window.history.replaceState({}, '', cleanUrl);
 
+    state.agentVerifyingLink = false;
     render();
   }
 
@@ -758,8 +764,8 @@
     state.activeSheetName = '';
     state.agentLoginError = '';
     state.agentLinkSent   = false;
-    sessionStorage.removeItem('rayna_agent_email');
-    sessionStorage.removeItem('rayna_agent_company');
+    localStorage.removeItem('rayna_agent_email');
+    localStorage.removeItem('rayna_agent_company');
     render();
   };
 
@@ -1089,6 +1095,20 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
   function render() {
+    const container = document.getElementById('app');
+    if (!container) return;
+
+    // While verifying an emailed sign-in link, show a dedicated full-screen loader
+    // and skip building the rest of the UI until it resolves.
+    if (state.agentVerifyingLink) {
+      container.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
+          <div class="spinner"></div>
+          <p style="font-size:13px;color:#888;font-weight:500;letter-spacing:0.05em;">Verifying your sign-in link…</p>
+        </div>`;
+      return;
+    }
+
     // Save current active input ID and cursor selection to prevent drop focus
     const activeId = document.activeElement ? document.activeElement.id : null;
     let selectionStart = null;
@@ -1102,8 +1122,6 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
     }
 
     state.view = getView();
-    const container = document.getElementById('app');
-    if (!container) return;
 
     const filtered = state.packages.filter(p => {
       const q = state.searchQuery.toLowerCase();
@@ -1406,13 +1424,18 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
             </div>
           </div>
 
-          <div class="file-modal-body" style="overflow:auto;background:#525659;">
+          <div class="file-modal-body" style="overflow:auto;background:#525659;position:relative;">
+            <div id="file-preview-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#525659;z-index:2;">
+              <div class="spinner" style="border-color:rgba(255,255,255,0.25);border-top-color:var(--gold);"></div>
+              <p style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:500;">Loading preview…</p>
+            </div>
             <div style="width:${zoom}%;min-width:${zoom < 100 ? '100%' : 'auto'};margin:0 auto;">
               <iframe
                 src="${embedUrl}"
                 title="${esc(file.name)}"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
                 style="width:100%;height:calc((100vh - 90px) * ${zoom / 100});border:none;display:block;"
+                onload="const el=document.getElementById('file-preview-loading'); if(el) el.style.display='none';"
               ></iframe>
             </div>
           </div>
@@ -1599,13 +1622,18 @@ Please let me know the booking procedures and upcoming departures. Thank you!`;
       ` : ''}
 
       <!-- Sheet iframe -->
-      <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+      <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;position:relative;">
+        <div id="hotel-sheet-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#fff;z-index:2;">
+          <div class="spinner"></div>
+          <p style="font-size:12px;color:#888;font-weight:500;">Loading hotel directory…</p>
+        </div>
         <iframe
           id="hotel-sheet-iframe"
           src="${sheetEmbedUrl}"
           style="width:100%;height:calc(100vh - ${state.hotelSearch ? '280' : '220'}px);min-height:500px;border:none;display:block;"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
           title="Hotel Directory"
+          onload="const el=document.getElementById('hotel-sheet-loading'); if(el) el.style.display='none';"
         ></iframe>
       </div>
 
