@@ -1,0 +1,43 @@
+// GET /api/drive-folder
+// Response: { files: [{ id, name, mimeType, webViewLink }, ...] }
+//
+// This replaces the old client-side call to the Google Drive API, which
+// exposed your API key to anyone viewing page source. The key now lives
+// only in this server-side function.
+//
+// Set these in Vercel → Project → Settings → Environment Variables:
+//   GOOGLE_API_KEY     (a Google Cloud API key with the Drive API enabled)
+//   DRIVE_FOLDER_ID     (optional override — defaults to the folder ID below)
+
+const DEFAULT_DRIVE_FOLDER_ID = '1mB1pOWQMtNgP06NeDXzjjBSx6MRCiccG';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const apiKey = process.env.GOOGLE_API_KEY;
+  const folderId = process.env.DRIVE_FOLDER_ID || DEFAULT_DRIVE_FOLDER_ID;
+
+  if (!apiKey) {
+    console.error('GOOGLE_API_KEY is not set in environment variables.');
+    return res.status(500).json({ error: 'Drive access is not configured on the server.' });
+  }
+
+  try {
+    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,webViewLink)&key=${apiKey}`;
+    const driveRes = await fetch(url);
+    const json = await driveRes.json();
+
+    if (!driveRes.ok) {
+      const message = json?.error?.message || `Drive API error ${driveRes.status}`;
+      return res.status(driveRes.status).json({ error: message });
+    }
+
+    return res.status(200).json({ files: json.files || [] });
+  } catch (err) {
+    console.error('Drive folder proxy error:', err);
+    return res.status(500).json({ error: 'Could not reach Google Drive.' });
+  }
+}
