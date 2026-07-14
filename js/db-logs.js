@@ -6,6 +6,40 @@ import { state, saveLocal } from './state.js';
 import { render } from './render.js';
 
 const LOCAL_KEY = 'agent_login_logs_v1';
+const RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // ~1 month
+
+// Runs at most once per page load (guarded below) — deletes any log entry
+// older than the retention window. Keeps the logs collection from growing
+// forever without needing a scheduled job or paid Cloud Function.
+let cleanupRan = false;
+
+async function purgeOldLogs() {
+  if (cleanupRan) return;
+  cleanupRan = true;
+
+  const cutoff = Date.now() - RETENTION_MS;
+  const stale = state.agentLogs.filter(l => {
+    const t = new Date(l.loggedAt || 0).getTime();
+    return !isNaN(t) && t < cutoff;
+  });
+  if (stale.length === 0) return;
+
+  if (!isFirebaseReady || !db) {
+    const remaining = state.agentLogs.filter(l => !stale.some(s => s.id === l.id));
+    state.agentLogs = remaining;
+    saveLocal(LOCAL_KEY, remaining);
+    render();
+    return;
+  }
+
+  try {
+    await Promise.all(stale.map(l =>
+      deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'agent_login_logs', l.id))
+    ));
+  } catch (err) {
+    console.error('Could not purge old agent login logs:', err);
+  }
+}
 
 export function loadLocalLogs() {
   try {
@@ -15,6 +49,7 @@ export function loadLocalLogs() {
     state.agentLogs = [];
   }
   state.agentLogsLoaded = true;
+  purgeOldLogs();
 }
 
 // Attaches the live Firestore listener for agent login logs.
@@ -27,6 +62,7 @@ export function attachLogsListener() {
     state.agentLogs = list;
     state.agentLogsLoaded = true;
     render();
+    purgeOldLogs();
   }, err => {
     console.error('Agent logs listener error:', err);
     state.agentLogsLoaded = true;
