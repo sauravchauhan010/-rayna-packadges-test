@@ -13,7 +13,6 @@ import { setupListeners, startLoadWatchdog } from './db.js';
 import { state } from './state.js';
 import { render } from './render.js';
 import { fetchFolderSheets } from './drive.js';
-import { completeAgentEmailLinkSignIn, hasPendingAgentSignInLink } from './agent-auth.js';
 
 window.addEventListener('popstate', render);
 
@@ -36,18 +35,7 @@ window.onload = async () => {
   await initAuth(state);
   setupListeners();
 
-  const hasEmailLink = hasPendingAgentSignInLink();
-
-  if (hasEmailLink && state.agentUnlocked) {
-    // Already signed in this session (link opened/clicked again) — don't re-redeem the
-    // one-time code, just clean the URL and drop the agent straight into private files.
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, '', cleanUrl);
-    state.activeView = 'hotels';
-    if (!state.folderFetched) fetchFolderSheets();
-  } else if (hasEmailLink) {
-    await completeAgentEmailLinkSignIn();
-  } else if (state.agentUnlocked) {
+  if (state.agentUnlocked) {
     // Restore agent session if previously logged in
     fetchFolderSheets();
   }
