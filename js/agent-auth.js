@@ -61,7 +61,19 @@ window.handleAgentLogin = async () => {
   state.activeView = 'hotels';
   state.agentLoginLoading = false;
   state.showAgentLoginForm = false;
-  recordAgentLogin(state.agentCompanyName, agentCode);
+
+  let location = 'Unknown';
+  try {
+    const locRes = await fetch('/api/agent-location');
+    if (locRes.ok) {
+      const locJson = await locRes.json();
+      location = locJson.location || 'Unknown';
+    }
+  } catch (err) {
+    console.warn('Could not determine agent location:', err);
+  }
+  recordAgentLogin(state.agentCompanyName, agentCode, location);
+
   await fetchFolderSheets();
   render();
 };
