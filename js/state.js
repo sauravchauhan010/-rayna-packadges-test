@@ -54,6 +54,8 @@ export const state = {
   agentLogs: [],
   agentLogsLoaded: false,
   adminLogSearchQuery: '',
+  adminLogDateFrom: '',
+  adminLogDateTo: '',
 
   // File preview modal
   previewFile: null,
