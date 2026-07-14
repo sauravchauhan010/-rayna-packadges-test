@@ -18,7 +18,7 @@ if (typeof window.__app_id !== 'undefined' && window.__app_id) {
 }
 
 // Google Sheets (public "anyone with link" htmlview embed — needs no API key)
-export const SHEETS_ID = '1DqDfJb6My3mPMlArN02czNR7LlEv1I_iwW5NiIb4aiM';
+export const SHEETS_ID = '1DqDfJb6My3mPMlArN02czNR7LlEv1I_iwW5NiIb4ai';
 export const SHEETS_RANGE = 'Sheet1';
 
 // Google Drive folder whose file *list* is fetched via /api/drive-folder
