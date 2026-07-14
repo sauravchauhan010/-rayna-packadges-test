@@ -1,35 +1,28 @@
-import {
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+// ─── AGENT LOGIN (agent code + password) ────────────────────────────────────
+// No email, no OTP, no Firebase Auth email sending involved — the admin sets
+// a Company Name, Agent Code, and Password per agent in the admin panel, and
+// this checks those two credentials directly against the Firestore agents
+// list (a free, uncapped read). Handles any login volume at zero cost.
 
-import { auth, isFirebaseReady } from './firebase.js';
 import { state } from './state.js';
 import { render } from './render.js';
 import { fetchFolderSheets } from './drive.js';
 
-function agentActionCodeSettings() {
-  return {
-    url: window.location.origin + window.location.pathname,
-    handleCodeInApp: true
-  };
-}
-
-window.handleSendAgentLink = async () => {
-  const emailEl = document.getElementById('agent-email-input');
-  const email = (emailEl ? emailEl.value : '').trim().toLowerCase();
+window.handleAgentLogin = async () => {
+  const codeEl = document.getElementById('agent-code-input');
+  const passEl = document.getElementById('agent-password-input');
+  const agentCode = (codeEl ? codeEl.value : '').trim();
+  const password = passEl ? passEl.value : '';
 
   state.agentLoginError = '';
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    state.agentLoginError = 'Please enter a valid email address.';
+  if (!agentCode) {
+    state.agentLoginError = 'Please enter your agent code.';
     render();
     return;
   }
-
-  if (!isFirebaseReady || !auth) {
-    state.agentLoginError = 'Agent login requires cloud mode and is unavailable right now. Please try again shortly.';
+  if (!password) {
+    state.agentLoginError = 'Please enter your password.';
     render();
     return;
   }
@@ -44,104 +37,31 @@ window.handleSendAgentLink = async () => {
     attempts++;
   }
 
-  const match = state.agents.find(a => (a.email || '').toLowerCase() === email);
+  const match = state.agents.find(a => (a.agentCode || '') === agentCode);
 
   if (!match) {
     state.agentLoginLoading = false;
-    state.agentLoginError = 'This email is not on our access list. Please contact Rayna Tours for access.';
+    state.agentLoginError = 'This agent code is not recognized. Please contact Rayna Tours for access.';
     render();
     return;
   }
 
-  try {
-    await sendSignInLinkToEmail(auth, email, agentActionCodeSettings());
-    window.localStorage.setItem('rayna_email_for_signin', email);
-    window.localStorage.setItem('rayna_company_for_signin', match.companyName || '');
-    state.agentLinkSent = true;
-    state.agentLoginError = '';
-  } catch (err) {
-    console.error('Send sign-in link error:', err);
-    state.agentLoginError = 'Could not send sign-in link: ' + err.message;
+  if (match.password !== password) {
+    state.agentLoginLoading = false;
+    state.agentLoginError = 'Incorrect password. Please check and try again.';
+    render();
+    return;
   }
 
+  state.agentUnlocked = agentCode;
+  state.agentCompanyName = match.companyName || '';
+  localStorage.setItem('rayna_agent_code', agentCode);
+  localStorage.setItem('rayna_agent_company', state.agentCompanyName);
+  state.activeView = 'hotels';
   state.agentLoginLoading = false;
+  state.showAgentLoginForm = false;
+  await fetchFolderSheets();
   render();
-};
-
-export function hasPendingAgentSignInLink() {
-  return isFirebaseReady && !!auth && isSignInWithEmailLink(auth, window.location.href);
-}
-
-// Handles the return trip when the agent clicks the emailed sign-in link
-export async function completeAgentEmailLinkSignIn() {
-  if (!isFirebaseReady || !auth) return;
-  if (!isSignInWithEmailLink(auth, window.location.href)) return;
-
-  state.agentVerifyingLink = true;
-  render();
-
-  let email = window.localStorage.getItem('rayna_email_for_signin');
-
-  if (!email) {
-    // Link opened on a different device/browser — ask the agent to confirm their email
-    state.agentVerifyingLink = false;
-    state.agentNeedsEmailConfirm = true;
-    state.activeView = 'hotels';
-    state.showAgentLoginForm = true;
-    render();
-    return;
-  }
-
-  try {
-    await signInWithEmailLink(auth, email, window.location.href);
-
-    // Wait briefly for the agents list to load so we can validate + fetch company name
-    let attempts = 0;
-    while (!state.agentsLoaded && attempts < 20) {
-      await new Promise(r => setTimeout(r, 150));
-      attempts++;
-    }
-    const match = state.agents.find(a => (a.email || '').toLowerCase() === email.toLowerCase());
-
-    if (!match) {
-      state.agentLoginError = 'This email is not on our access list. Please contact Rayna Tours for access.';
-    } else {
-      state.agentUnlocked = email;
-      state.agentCompanyName = match.companyName || '';
-      localStorage.setItem('rayna_agent_email', email);
-      localStorage.setItem('rayna_agent_company', state.agentCompanyName);
-      state.activeView = 'hotels';
-      await fetchFolderSheets();
-    }
-  } catch (err) {
-    console.error('Email link sign-in error:', err);
-    state.agentLoginError = 'That sign-in link has already been used or has expired. Please request a new one.';
-    state.activeView = 'hotels';
-    state.showAgentLoginForm = true;
-  }
-
-  window.localStorage.removeItem('rayna_email_for_signin');
-  window.localStorage.removeItem('rayna_company_for_signin');
-
-  const cleanUrl = window.location.origin + window.location.pathname;
-  window.history.replaceState({}, '', cleanUrl);
-
-  state.agentVerifyingLink = false;
-  render();
-}
-
-window.handleConfirmAgentEmail = async () => {
-  const emailEl = document.getElementById('agent-confirm-email-input');
-  const email = (emailEl ? emailEl.value : '').trim().toLowerCase();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    state.agentLoginError = 'Please enter a valid email address.';
-    render();
-    return;
-  }
-  window.localStorage.setItem('rayna_email_for_signin', email);
-  state.agentNeedsEmailConfirm = false;
-  render();
-  await completeAgentEmailLinkSignIn();
 };
 
 window.agentLogout = () => {
@@ -152,8 +72,7 @@ window.agentLogout = () => {
   state.activeSheetId    = null;
   state.activeSheetName  = '';
   state.agentLoginError  = '';
-  state.agentLinkSent    = false;
-  localStorage.removeItem('rayna_agent_email');
+  localStorage.removeItem('rayna_agent_code');
   localStorage.removeItem('rayna_agent_company');
   render();
 };
