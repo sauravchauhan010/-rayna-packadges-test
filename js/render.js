@@ -19,17 +19,6 @@ function getView() {
     const container = document.getElementById('app');
     if (!container) return;
 
-    // While verifying an emailed sign-in link, show a dedicated full-screen loader
-    // and skip building the rest of the UI until it resolves.
-    if (state.agentVerifyingLink) {
-      container.innerHTML = `
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;">
-          <div class="spinner"></div>
-          <p style="font-size:13px;color:#888;font-weight:500;letter-spacing:0.05em;">Verifying your sign-in link…</p>
-        </div>`;
-      return;
-    }
-
     // Save current active input ID and cursor selection to prevent drop focus
     const activeId = document.activeElement ? document.activeElement.id : null;
     let selectionStart = null;
