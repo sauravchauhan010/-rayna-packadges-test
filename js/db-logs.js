@@ -35,10 +35,11 @@ export function attachLogsListener() {
 
 // Records a single successful agent login. Called only on a successful
 // agent-code + password match — never on failed attempts or hotel-sheet views.
-export async function recordAgentLogin(companyName, agentCode) {
+export async function recordAgentLogin(companyName, agentCode, location) {
   const entry = {
     companyName: companyName || '',
     agentCode: agentCode || '',
+    location: location || 'Unknown',
     loggedAt: new Date().toISOString()
   };
 
