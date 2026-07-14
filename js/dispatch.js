@@ -40,7 +40,6 @@ window.dispatch = (action, payload) => {
     case 'TOGGLE_AGENT_LOGIN_FORM':
       state.showAgentLoginForm = !state.showAgentLoginForm;
       state.agentLoginError = '';
-      state.agentLinkSent = false;
       break;
     case 'SWITCH_ADMIN_SECTION':
       state.adminSection = payload;
