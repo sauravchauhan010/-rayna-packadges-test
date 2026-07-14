@@ -10,7 +10,7 @@ import { state, esc, pkgJson } from './state.js';
     return { icon: '📁', label: 'File', color: '#6b7280' };
   }
 
-  function renderCustomer(filtered) {
+  export function renderCustomer(filtered) {
     const destinations = ['All', ...new Set(state.packages.map(p => p.title))];
 
     return `
@@ -128,7 +128,7 @@ import { state, esc, pkgJson } from './state.js';
     </main>`;
   }
 
-  function renderPreviewModal() {
+  export function renderPreviewModal() {
     if (!state.previewFile) return '';
     const file = state.previewFile;
     const { icon, label } = fileIcon(file.mimeType);
@@ -187,7 +187,7 @@ import { state, esc, pkgJson } from './state.js';
     `;
   }
 
-  function renderHotels() {
+  export function renderHotels() {
 
     // ── When an agent is logged in: show folder file list + optional sheet table ──
     if (state.agentUnlocked) {
@@ -372,7 +372,7 @@ import { state, esc, pkgJson } from './state.js';
     </main>`;
   }
 
-  function renderLogin() {
+  export function renderLogin() {
     return `
     <main style="flex:1;display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 58px);padding:24px;background:var(--navy-mid); width: 100%;">
       <div style="width:100%;max-width:360px;">
@@ -404,7 +404,7 @@ import { state, esc, pkgJson } from './state.js';
     </main>`;
   }
 
-  function renderAdmin() {
+  export function renderAdmin() {
     const isCloud = !!(isFirebaseReady && db);
 
     const adminBarAndNav = `
@@ -701,7 +701,7 @@ import { state, esc, pkgJson } from './state.js';
     `;
   }
 
-  function renderDeleteConfirmationModal() {
+  export function renderDeleteConfirmationModal() {
     const target = state.deleteTarget;
     const isAgent = target.type === 'agent';
 
