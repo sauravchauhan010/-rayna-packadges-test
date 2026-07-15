@@ -378,12 +378,6 @@ import { SHEETS_ID } from './config.js';
           ${isCloud ? '● Synchronized' : '○ Local Database'}
         </span>
       </div>
-
-      <div class="view-toggle" style="margin-bottom:20px;">
-        <button class="view-toggle-btn ${state.adminSection === 'packages' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'packages')">✈ Departures</button>
-        <button class="view-toggle-btn ${state.adminSection === 'agents' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'agents')">🔑 Access List</button>
-        <button class="view-toggle-btn ${state.adminSection === 'logs' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'logs')">📋 Login Logs</button>
-      </div>
     `;
 
     if (state.adminSection === 'agents') {
@@ -468,21 +462,6 @@ import { SHEETS_ID } from './config.js';
                 <span style="font-size:11px;color:#888;font-weight:500;">
                   ${adminFiltered.length} of ${state.packages.length} listed
                 </span>
-              </div>
-
-              <!-- Admin search filter -->
-              <div style="position:relative; width:100%; max-width:240px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
-                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  id="admin-search-input"
-                  placeholder="Search departures..."
-                  value="${esc(state.adminSearchQuery)}"
-                  oninput="dispatch('ADMIN_SEARCH', this.value)"
-                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
-                />
               </div>
             </div>
 
@@ -604,19 +583,6 @@ import { SHEETS_ID } from './config.js';
                   ${filtered.length} of ${state.agents.length} agents
                 </span>
               </div>
-
-              <div style="position:relative; width:100%; max-width:240px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
-                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search company or agent code..."
-                  value="${esc(state.agentSearchQuery)}"
-                  oninput="dispatch('AGENT_SEARCH', this.value)"
-                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
-                />
-              </div>
             </div>
 
             ${!state.agentsLoaded ? `
@@ -681,8 +647,6 @@ import { SHEETS_ID } from './config.js';
       return true;
     });
 
-    const hasDateFilter = !!(state.adminLogDateFrom || state.adminLogDateTo);
-
     function formatTimestamp(iso) {
       if (!iso) return '—';
       const d = new Date(iso);
@@ -700,38 +664,8 @@ import { SHEETS_ID } from './config.js';
             </span>
           </div>
 
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div style="position:relative; width:100%; max-width:240px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
-                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-              </svg>
-              <input
-                type="text"
-                placeholder="Search company, agent code, or location..."
-                value="${esc(state.adminLogSearchQuery)}"
-                oninput="dispatch('ADMIN_LOG_SEARCH', this.value)"
-                style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
-              />
-            </div>
-            ${state.agentLogs.length > 0 ? `
-              <button class="btn-danger" style="padding:6px 12px;font-size:10px;" onclick="triggerClearLogsConfirmation()">Clear All</button>
-            ` : ''}
-          </div>
-        </div>
-
-        <div style="padding:12px 18px;border-bottom:1px solid #ede9e1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#faf8f4;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <label class="field-label" style="margin:0;">From</label>
-            <input type="date" value="${esc(state.adminLogDateFrom)}" onchange="dispatch('ADMIN_LOG_DATE_FROM', this.value)"
-              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <label class="field-label" style="margin:0;">To</label>
-            <input type="date" value="${esc(state.adminLogDateTo)}" onchange="dispatch('ADMIN_LOG_DATE_TO', this.value)"
-              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
-          </div>
-          ${hasDateFilter || state.adminLogSearchQuery ? `
-            <button onclick="dispatch('ADMIN_LOG_CLEAR_FILTERS')" style="font-size:10px;font-weight:600;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;">✕ Clear Filters</button>
+          ${state.agentLogs.length > 0 ? `
+            <button class="btn-danger" style="padding:6px 12px;font-size:10px;" onclick="triggerClearLogsConfirmation()">Clear All</button>
           ` : ''}
         </div>
 
