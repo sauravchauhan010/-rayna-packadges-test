@@ -46,7 +46,7 @@ function getView() {
     // ── FLUID STICKY NAV WITH EMBEDDED SEARCH BOX ──
     html += `
     <header style="position: -webkit-sticky; position: sticky; top: 0; z-index: 50; background: #ffffff; box-shadow: 0 2px 12px rgba(10,22,40,0.06); border-bottom: 1px solid #ede9e1; width: 100%;">
-      <div style="width:100%;padding:0 20px;height:58px;display:flex;justify-content:space-between;align-items:center;gap:16px;">
+      <div style="width:100%;padding:9px 20px;min-height:58px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;">
         
         <!-- View Toggle (moved here from center) + Status -->
         <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
@@ -61,6 +61,12 @@ function getView() {
                 🏨 Hotels
               </button>
             </div>
+          ` : state.view === 'admin' ? `
+            <div class="view-toggle">
+              <button class="view-toggle-btn ${state.adminSection === 'packages' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'packages')">✈ Departures</button>
+              <button class="view-toggle-btn ${state.adminSection === 'agents' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'agents')">🔑 Access List</button>
+              <button class="view-toggle-btn ${state.adminSection === 'logs' ? 'active' : ''}" onclick="dispatch('SWITCH_ADMIN_SECTION', 'logs')">📋 Login Logs</button>
+            </div>
           ` : `
             <div class="hidden md:block" style="cursor:pointer;" onclick="dispatch('GO_HOME')">
               <div style="font-size:8px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(10,22,40,0.5);display:flex;align-items:center;gap:4px;margin-top:1px;">
@@ -71,7 +77,7 @@ function getView() {
           `}
         </div>
 
-        <!-- Embedded Sticky Search Box (Only on customer page) -->
+        <!-- Embedded Sticky Search Box (customer packages + all admin sections) -->
         ${state.view === 'customer' ? `
           <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
 
@@ -92,6 +98,71 @@ function getView() {
                   onblur="this.style.borderColor='#ede9e1';"
                 />
               </div>
+            ` : ''}
+
+          </div>
+        ` : state.view === 'admin' ? `
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;padding:8px 0;">
+
+            ${state.adminSection === 'packages' ? `
+              <div style="position:relative;flex:1;min-width:180px;max-width:280px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="admin-search-input"
+                  placeholder="Search departures..."
+                  value="${esc(state.adminSearchQuery)}"
+                  oninput="dispatch('ADMIN_SEARCH', this.value)"
+                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
+                />
+              </div>
+            ` : ''}
+
+            ${state.adminSection === 'agents' ? `
+              <div style="position:relative;flex:1;min-width:180px;max-width:280px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="agent-search-input"
+                  placeholder="Search company or agent code..."
+                  value="${esc(state.agentSearchQuery)}"
+                  oninput="dispatch('AGENT_SEARCH', this.value)"
+                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
+                />
+              </div>
+            ` : ''}
+
+            ${state.adminSection === 'logs' ? `
+              <div style="position:relative;flex:1;min-width:180px;max-width:260px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="admin-log-search-input"
+                  placeholder="Search company, agent code, or location..."
+                  value="${esc(state.adminLogSearchQuery)}"
+                  oninput="dispatch('ADMIN_LOG_SEARCH', this.value)"
+                  style="width:100%;background:#faf8f4;border:1px solid #ede9e1;border-radius:6px;padding:6px 10px 6px 30px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;"
+                />
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <label style="font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#888;">From</label>
+                <input type="date" id="admin-log-date-from" value="${esc(state.adminLogDateFrom)}" onchange="dispatch('ADMIN_LOG_DATE_FROM', this.value)"
+                  style="font-family:'DM Sans',sans-serif;font-size:11px;padding:5px 6px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <label style="font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#888;">To</label>
+                <input type="date" id="admin-log-date-to" value="${esc(state.adminLogDateTo)}" onchange="dispatch('ADMIN_LOG_DATE_TO', this.value)"
+                  style="font-family:'DM Sans',sans-serif;font-size:11px;padding:5px 6px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"/>
+              </div>
+              ${state.adminLogSearchQuery || state.adminLogDateFrom || state.adminLogDateTo ? `
+                <button onclick="dispatch('ADMIN_LOG_CLEAR_FILTERS')" style="font-size:10px;font-weight:600;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">✕ Clear</button>
+              ` : ''}
             ` : ''}
 
           </div>
