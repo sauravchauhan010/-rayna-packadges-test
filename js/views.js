@@ -2,32 +2,6 @@ import { isFirebaseReady, db } from './firebase.js';
 import { state, esc, pkgJson } from './state.js';
 import { SHEETS_ID } from './config.js';
 
-// Finds rows in the cached common-sheet data where any cell contains the
-// search query, and returns which specific cells matched (so we can show
-// "column: value" context rather than dumping the whole row).
-function getHotelSheetMatches(query, limit = 15) {
-  const q = query.trim().toLowerCase();
-  if (!q || !state.hotelSheetDataLoaded) return { matches: [], total: 0 };
-  const cols = state.hotelSheetCols;
-  const matches = [];
-  let total = 0;
-  for (const row of state.hotelSheetRows) {
-    const hitCells = [];
-    row.forEach((val, i) => {
-      if (val && String(val).toLowerCase().includes(q)) {
-        hitCells.push({ col: cols[i] || `Col ${i + 1}`, val });
-      }
-    });
-    if (hitCells.length) {
-      total++;
-      if (matches.length < limit) {
-        matches.push({ label: row.find(v => v && v.trim()) || '(untitled row)', hitCells });
-      }
-    }
-  }
-  return { matches, total };
-}
-
   function fileIcon(mimeType) {
     if (mimeType === 'application/vnd.google-apps.folder')      return { icon: '📁', label: 'Folder',       color: '#c9a84c' };
     if (mimeType === 'application/vnd.google-apps.spreadsheet') return { icon: '🟢', label: 'Google Sheet', color: '#16a34a' };
@@ -354,40 +328,15 @@ function getHotelSheetMatches(query, limit = 15) {
         </div>
       </div>
 
-      <!-- Search results: real matches pulled from the sheet's own data, listed above the iframe -->
-      ${state.hotelSearch ? (() => {
-        if (state.hotelSheetDataLoading) {
-          return `
-          <div style="flex-shrink:0;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;padding:10px 16px;display:flex;align-items:center;gap:8px;">
-            <div class="spinner" style="width:14px;height:14px;"></div>
-            <span style="font-size:11px;color:#888;">Searching the sheet…</span>
-          </div>`;
-        }
-        if (state.hotelSheetDataError) {
-          return `
-          <div style="flex-shrink:0;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;padding:10px 16px;">
-            <span style="font-size:11px;color:#a55;">${esc(state.hotelSheetDataError)}</span>
-          </div>`;
-        }
-        const { matches, total } = getHotelSheetMatches(state.hotelSearch);
-        return `
-        <div id="hotel-search-results" style="flex-shrink:0;max-height:38vh;overflow-y:auto;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;">
-          <div style="padding:8px 16px;background:var(--slate-soft);border-bottom:1px solid #ede9e1;position:sticky;top:0;">
-            <span style="font-size:11px;font-weight:600;color:#666;">${total} row${total === 1 ? '' : 's'} match "<strong>${esc(state.hotelSearch)}</strong>"</span>
+      <!-- Search results banner (fixed height, includes the Ctrl+F tip inline so it doesn't add a second row below the sheet) -->
+      ${state.hotelSearch ? `
+        <div id="hotel-search-results" style="flex-shrink:0;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+          <div style="padding:10px 16px;background:var(--slate-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="font-size:11px;font-weight:600;color:#666;">Searching for "<strong>${esc(state.hotelSearch)}</strong>" — press <kbd style="background:#f5f3ef;border:1px solid #ddd8ce;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+F</kbd> inside the sheet below to jump to matches</span>
           </div>
-          ${total === 0 ? `
-            <div style="padding:14px 16px;font-size:12px;color:#aaa;">No matches found in the sheet.</div>
-          ` : matches.map(m => `
-            <div style="padding:9px 16px;border-bottom:1px solid #f2efe9;">
-              <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:2px;">${esc(m.label)}</div>
-              <div style="font-size:11px;color:#888;">
-                ${m.hitCells.map(h => `<span style="margin-right:14px;">${esc(h.col)}: <strong style="color:#555;">${esc(h.val)}</strong></span>`).join('')}
-              </div>
-            </div>
-          `).join('')}
-          ${total > matches.length ? `<div style="padding:8px 16px;font-size:11px;color:#aaa;">+ ${total - matches.length} more — refine your search to narrow it down</div>` : ''}
-        </div>`;
-      })() : ''}
+        </div>
+      ` : ''}
 
       <!-- Sheet iframe: fills all remaining space, so the sheet's own tab strip at the bottom always stays on-screen without page scrolling -->
       <div style="flex:1;min-height:0;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;position:relative;display:flex;">
