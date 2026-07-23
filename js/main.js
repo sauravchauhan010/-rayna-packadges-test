@@ -67,13 +67,12 @@ async function checkAgentSession() {
 }
 
 window.onload = async () => {
-  await initAuth(state);
-  setupListeners();
+  // initAuth (Firebase sign-in) and the two session checks are independent
+  // of each other — run them in parallel instead of one after another to
+  // shave a full network round-trip off the initial load.
+  const authThenListeners = initAuth(state).then(() => setupListeners());
 
-  // Both of these ask the server to confirm a signed session cookie is
-  // valid — a spoofed localStorage/sessionStorage flag can no longer grant
-  // access on its own.
-  await Promise.all([checkAdminSession(), checkAgentSession()]);
+  await Promise.all([authThenListeners, checkAdminSession(), checkAgentSession()]);
 
   if (state.agentUnlocked) {
     fetchFolderSheets();
