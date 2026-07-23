@@ -3,7 +3,6 @@ import { render } from './render.js';
 import { deletePackage } from './db-packages.js';
 import { deleteAgent } from './db-agents.js';
 import { clearAllLogs } from './db-logs.js';
-import { fetchHotelSheetData } from './drive.js';
 
 window.dispatch = (action, payload) => {
   switch (action) {
@@ -36,9 +35,6 @@ window.dispatch = (action, payload) => {
       break;
     case 'HOTEL_SEARCH':
       state.hotelSearch = payload;
-      if (payload && !state.hotelSheetDataLoaded && !state.hotelSheetDataLoading) {
-        fetchHotelSheetData();
-      }
       break;
     case 'FOLDER_SEARCH':
       state.folderSearch = payload;
