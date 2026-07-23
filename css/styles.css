@@ -284,3 +284,46 @@
     .hotel-star { color: var(--gold); font-size: 11px; }
     .file-row:hover { background: #fdfcfa !important; }
     .file-row:last-child { border-bottom: none; }
+
+    /* ─── Hand-written replacements for the Tailwind utility classes actually
+       used in this project (checked across every file). Lets us drop the
+       Tailwind CDN script, which compiles styles live in the browser on
+       every re-render and was adding real, ongoing load — not just a
+       one-time cost at page load. ─── */
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .flex-shrink-0 { flex-shrink: 0; }
+    .gap-6 { gap: 24px; }
+    .items-start { align-items: flex-start; }
+    .justify-start { justify-content: flex-start; }
+    .w-full { width: 100%; }
+    .hidden { display: none; }
+    .opacity-0 { opacity: 0; }
+    .opacity-100 { opacity: 1; }
+    .pointer-events-none { pointer-events: none; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* translate-y / scale utilities compose onto one `transform` via CSS
+       variables, the same trick Tailwind itself uses, so e.g. the
+       back-to-top button's translate + hover-scale don't stomp on each other */
+    .translate-y-0, .translate-y-4, .hover\:scale-105, .active\:scale-95 {
+      transform: translateY(var(--ty, 0)) scale(var(--sc, 1));
+    }
+    .translate-y-0 { --ty: 0; }
+    .translate-y-4 { --ty: 1rem; }
+    .hover\:scale-105:hover { --sc: 1.05; }
+    .active\:scale-95:active { --sc: 0.95; }
+
+    @media (min-width: 768px) {
+      .md\:justify-center { justify-content: center; }
+      .md\:block { display: block; }
+    }
+
+    @media (min-width: 1024px) {
+      .lg\:flex-row { flex-direction: row; }
+      .lg\:sticky { position: sticky; }
+      .lg\:top-\[74px\] { top: 74px; }
+      .lg\:max-w-\[320px\] { max-width: 320px; }
+    }
