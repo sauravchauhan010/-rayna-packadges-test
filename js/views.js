@@ -243,7 +243,7 @@ import { SHEETS_ID } from './config.js';
           const isFolder = file.mimeType === 'application/vnd.google-apps.folder';
           const isActive = !isFolder && state.activeSheetId === file.id;
           const bg = isActive ? 'background:#fffbf0;' : '';
-          return '<div onclick="openPromoFile(' + i + ')" class="file-row" style="display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #f0ece4;cursor:pointer;background:#fff;' + bg + '">'
+          return '<div onclick="openPromoFile(\'' + file.id + '\')" class="file-row" style="display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid #f0ece4;cursor:pointer;background:#fff;' + bg + '">'
             + '<span style="font-size:20px;flex-shrink:0;">' + icon + '</span>'
             + '<div style="flex:1;min-width:0;">'
             + '<div style="font-size:13px;font-weight:' + (isActive ? '700' : '500') + ';color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(file.name) + '</div>'
@@ -293,10 +293,10 @@ import { SHEETS_ID } from './config.js';
     const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/htmlview?embedded=true&rm=minimal`;
 
     return `
-    <main style="flex:1;width:100%;padding:32px 20px 80px;">
+    <main style="width:100%;padding:20px 20px 12px;height:calc(100vh - var(--rayna-header-h, 58px));box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;">
 
-      <!-- Header row: title + promo + search -->
-      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <!-- Header row: title + promo + search (fixed height, never scrolls away) -->
+      <div style="flex-shrink:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
           <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;">Hotel Directory</h2>
           <p style="font-size:12px;color:#888;margin:0;">Curated hotel options — live from our database.</p>
@@ -325,18 +325,18 @@ import { SHEETS_ID } from './config.js';
         </div>
       </div>
 
-      <!-- Search results overlay (shown when searching) -->
+      <!-- Search results banner (fixed height, includes the Ctrl+F tip inline so it doesn't add a second row below the sheet) -->
       ${state.hotelSearch ? `
-        <div id="hotel-search-results" style="margin-bottom:16px;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
-          <div style="padding:10px 16px;background:var(--slate-soft);border-bottom:1px solid #ede9e1;display:flex;align-items:center;gap:8px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <span style="font-size:11px;font-weight:600;color:#666;">Searching for "<strong>${esc(state.hotelSearch)}</strong>" in the sheet below — use Ctrl+F in the sheet to highlight matches</span>
+        <div id="hotel-search-results" style="flex-shrink:0;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
+          <div style="padding:10px 16px;background:var(--slate-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <span style="font-size:11px;font-weight:600;color:#666;">Searching for "<strong>${esc(state.hotelSearch)}</strong>" — press <kbd style="background:#f5f3ef;border:1px solid #ddd8ce;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+F</kbd> inside the sheet below to jump to matches</span>
           </div>
         </div>
       ` : ''}
 
-      <!-- Sheet iframe -->
-      <div style="background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;position:relative;">
+      <!-- Sheet iframe: fills all remaining space, so the sheet's own tab strip at the bottom always stays on-screen without page scrolling -->
+      <div style="flex:1;min-height:0;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;position:relative;display:flex;">
         <div id="hotel-sheet-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#fff;z-index:2;">
           <div class="spinner"></div>
           <p style="font-size:12px;color:#888;font-weight:500;">Loading hotel directory…</p>
@@ -344,18 +344,12 @@ import { SHEETS_ID } from './config.js';
         <iframe
           id="hotel-sheet-iframe"
           src="${sheetEmbedUrl}"
-          style="width:100%;height:calc(100vh - ${state.hotelSearch ? '280' : '220'}px);min-height:500px;border:none;display:block;"
+          style="width:100%;height:100%;border:none;display:block;"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups-to-escape-sandbox"
           title="Hotel Directory"
           onload="const el=document.getElementById('hotel-sheet-loading'); if(el) el.style.display='none';"
         ></iframe>
       </div>
-
-      ${state.hotelSearch ? `
-        <div style="margin-top:10px;text-align:center;">
-          <p style="font-size:11px;color:#aaa;">Tip: Click inside the sheet and press <kbd style="background:#f5f3ef;border:1px solid #ddd8ce;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+F</kbd> to find "<strong>${esc(state.hotelSearch)}</strong>" within the sheet</p>
-        </div>
-      ` : ''}
 
     </main>`;
   }
