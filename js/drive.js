@@ -39,8 +39,8 @@ export async function fetchFolderSheets(folderId = null) {
 
 // Clicking a row: folders drill in (pushed onto the breadcrumb stack and
 // re-fetched), files open the preview modal — same as before.
-window.openPromoFile = (index) => {
-  const file = state.folderSheets[index];
+window.openPromoFile = (fileId) => {
+  const file = state.folderSheets.find(f => f.id === fileId);
   if (!file) return;
 
   if (file.mimeType === FOLDER_MIME) {
