@@ -163,10 +163,12 @@ function getHotelSheetMatches(query, limit = 15) {
     const zoom = state.previewZoom || 100;
     const isSheet = file.mimeType === 'application/vnd.google-apps.spreadsheet';
 
-    // Sheets use the live edit URL (respects frozen rows/columns set in the sheet;
-    // htmlview does not honor freeze panes at all), everything else uses /preview
+    // Sheets use htmlview — always read-only regardless of who's logged in
+    // (the /edit URL respects frozen panes but is editable by anyone with
+    // edit access on the sheet, which we don't want here), everything else
+    // uses /preview
     const embedUrl = isSheet
-      ? `https://docs.google.com/spreadsheets/d/${file.id}/edit?usp=sharing&rm=minimal&widget=true&headers=false`
+      ? `https://docs.google.com/spreadsheets/d/${file.id}/htmlview?embedded=true&rm=minimal`
       : `https://drive.google.com/file/d/${file.id}/preview?embedded=true`;
 
     return `
@@ -317,7 +319,7 @@ function getHotelSheetMatches(query, limit = 15) {
 
     // ── Default: common sheet view — iframe embed ──
     // Append search query as a hash to scroll to matching tab if sheet has named tabs
-    const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/edit?usp=sharing&rm=minimal&widget=true&headers=false`;
+    const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/htmlview?embedded=true&rm=minimal`;
 
     return `
     <main style="width:100%;padding:20px 20px 12px;height:calc(100vh - var(--rayna-header-h, 58px));box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;">
