@@ -1,4 +1,4 @@
-import { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { db, isFirebaseReady } from './firebase.js';
 import { APP_ID, SEED_PACKAGES } from './config.js';
@@ -19,23 +19,13 @@ export function loadLocalPackages() {
 // storage if Firestore isn't reachable.
 export function attachPackagesListener(onFallback) {
   const pkgsCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'packages');
-  onSnapshot(pkgsCol, async (snap) => {
+  onSnapshot(pkgsCol, (snap) => {
     const list = [];
     snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-
-    if (list.length === 0 && state.isDbLoading) {
-      try {
-        for (const item of SEED_PACKAGES) {
-          const { id: _id, ...data } = item;
-          await addDoc(pkgsCol, data);
-        }
-      } catch (err) { console.error('Seed error:', err); }
-    } else {
-      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      state.packages = list;
-      state.isDbLoading = false;
-      render();
-    }
+    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    state.packages = list;
+    state.isDbLoading = false;
+    render();
   }, err => {
     console.error('Packages listener error:', err);
     onFallback();
@@ -47,7 +37,11 @@ export async function deletePackage(id) {
     state.packages = state.packages.filter(p => p.id !== id);
     saveLocal('rayna_pkgs_v4', state.packages);
   } else {
-    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'packages', id));
+    await fetch('/api/packages', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
   }
   if (state.editingId === id) {
     state.editingId = null;
@@ -119,18 +113,28 @@ window.handlePackageSubmit = async (e) => {
 
   try {
     if (state.editingId) {
-      const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'packages', state.editingId);
-      await updateDoc(ref, payload);
+      const res = await fetch('/api/packages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: state.editingId, ...payload })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not update package.');
       state.formSuccess = 'Package updated successfully.';
     } else {
-      const col = collection(db, 'artifacts', APP_ID, 'public', 'data', 'packages');
-      await addDoc(col, payload);
+      const res = await fetch('/api/packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not create package.');
       state.formSuccess = 'Package published successfully.';
     }
     state.editingId = null;
     state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
   } catch (err) {
-    state.formError = 'Database error: ' + err.message;
+    state.formError = err.message;
   }
   render();
 };
