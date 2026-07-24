@@ -268,14 +268,14 @@ import { SHEETS_ID } from './config.js';
           while the file list underneath scrolls.
         -->
         <div style="position:sticky;position:-webkit-sticky;top:var(--rayna-header-h, 58px);z-index:40;background:var(--cream, #faf8f4);padding-top:32px;margin:0 -20px;padding-left:20px;padding-right:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-            <div>
-              <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;">Private Files</h2>
-              <p style="font-size:12px;color:#888;margin:0;">Your exclusive access folder.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:nowrap;gap:10px;">
+            <div style="min-width:0;">
+              <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;white-space:nowrap;">Private Files</h2>
+              <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;">Your exclusive access folder.</p>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;">🔓 ${esc(state.agentCompanyName || state.agentUnlocked)}</span>
-              <button onclick="agentLogout()" style="font-size:10px;font-weight:600;color:#aaa;background:none;border:1px solid #ddd;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕ Sign Out</button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;white-space:nowrap;">🔓 ${esc(state.agentCompanyName || state.agentUnlocked)}</span>
+              <button onclick="agentLogout()" style="font-size:10px;font-weight:600;color:#aaa;background:none;border:1px solid #ddd;border-radius:20px;padding:4px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">✕ Sign Out</button>
             </div>
           </div>
           <div style="background:#fff;border-radius:8px 8px 0 0;border:1px solid #ede9e1;border-bottom:none;overflow:hidden;">
@@ -298,45 +298,22 @@ import { SHEETS_ID } from './config.js';
     return `
     <main style="width:100%;padding:20px 20px 12px;height:calc(100vh - var(--rayna-header-h, 58px));box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;">
 
-      <!-- Header row: title + promo + search (fixed height, never scrolls away) -->
-      <div style="flex-shrink:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div>
-          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;">Hotel Directory</h2>
-          <p style="font-size:12px;color:#888;margin:0;">Curated hotel options — live from our database.</p>
+      <!-- Header row: title + promo + Agent Login, kept on one line -->
+      <div style="flex-shrink:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:12px;">
+        <div style="min-width:0;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;white-space:nowrap;">Hotel Directory</h2>
+          <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;">Curated hotel options — live from our database.</p>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-
-          <!-- Search box -->
-          <div style="position:relative;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input
-              id="hotel-search-input"
-              type="text"
-              placeholder="Search in sheet…"
-              value="${esc(state.hotelSearch)}"
-              oninput="dispatch('HOTEL_SEARCH', this.value)"
-              style="font-family:'DM Sans',sans-serif;font-size:12px;padding:6px 12px 6px 30px;border:1px solid #ddd8ce;border-radius:6px;outline:none;width:180px;color:var(--navy);background:#fff;"
-              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#ddd8ce'"/>
-            ${state.hotelSearch ? `<button onclick="dispatch('HOTEL_SEARCH','')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#aaa;line-height:1;">✕</button>` : ''}
-          </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
 
           <!-- Agent Login trigger -->
-          <button onclick="dispatch('TOGGLE_AGENT_LOGIN_FORM')" class="btn-outline" style="padding:6px 14px;font-size:10px;display:flex;align-items:center;gap:6px;">
+          <button onclick="dispatch('TOGGLE_AGENT_LOGIN_FORM')" class="btn-outline" style="padding:6px 14px;font-size:10px;display:flex;align-items:center;gap:6px;white-space:nowrap;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Agent Login
           </button>
         </div>
       </div>
 
-      <!-- Search results banner (fixed height, includes the Ctrl+F tip inline so it doesn't add a second row below the sheet) -->
-      ${state.hotelSearch ? `
-        <div id="hotel-search-results" style="flex-shrink:0;margin-bottom:12px;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;">
-          <div style="padding:10px 16px;background:var(--slate-soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <span style="font-size:11px;font-weight:600;color:#666;">Searching for "<strong>${esc(state.hotelSearch)}</strong>" — press <kbd style="background:#f5f3ef;border:1px solid #ddd8ce;border-radius:3px;padding:1px 5px;font-size:10px;">Ctrl+F</kbd> inside the sheet below to jump to matches</span>
-          </div>
-        </div>
-      ` : ''}
 
       <!-- Sheet iframe: fills all remaining space, so the sheet's own tab strip at the bottom always stays on-screen without page scrolling -->
       <div style="flex:1;min-height:0;background:#fff;border-radius:8px;border:1px solid #ede9e1;overflow:hidden;position:relative;display:flex;">
