@@ -3,6 +3,42 @@ import { render } from './render.js';
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 
+// Fetches the common Hotel Directory sheet's raw cell data via Google's
+// public gviz JSON feed (works for any sheet shared "anyone with the link
+// can view" — the same access level the htmlview embed already relies on).
+// Cached once in state so repeated keystrokes in the search box don't
+// re-fetch; only runs the first time a search is made.
+export async function fetchHotelSheetData() {
+  if (state.hotelSheetDataLoading || state.hotelSheetDataLoaded) return;
+  state.hotelSheetDataLoading = true;
+  state.hotelSheetDataError = '';
+  render();
+  try {
+    const res = await fetch(`https://docs.google.com/spreadsheets/d/${state.sheetsId}/gviz/tq?tqx=out:json`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Sheet data error ${res.status}`);
+    const text = await res.text();
+    const jsonStart = text.indexOf('(');
+    const jsonEnd = text.lastIndexOf(')');
+    const json = JSON.parse(text.substring(jsonStart + 1, jsonEnd));
+    const cols = (json.table.cols || []).map((c, i) => c.label || c.id || `Col ${i + 1}`);
+    const rows = (json.table.rows || []).map(r =>
+      (r.c || []).map(cell => {
+        if (!cell) return '';
+        const v = cell.f ?? cell.v;
+        return v == null ? '' : String(v);
+      })
+    );
+    state.hotelSheetCols = cols;
+    state.hotelSheetRows = rows;
+    state.hotelSheetDataLoaded = true;
+  } catch (err) {
+    console.error('Hotel sheet data fetch error:', err);
+    state.hotelSheetDataError = 'Live search unavailable right now — use Ctrl+F in the sheet below instead.';
+  }
+  state.hotelSheetDataLoading = false;
+  render();
+}
+
 // Fetches the contents of a single Drive folder. `folderId` of null/undefined
 // means "root" — the server falls back to DRIVE_FOLDER_ID in that case.
 export async function fetchFolderSheets(folderId = null) {
