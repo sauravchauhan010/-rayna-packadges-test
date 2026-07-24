@@ -1,6 +1,5 @@
 import { isFirebaseReady, db } from './firebase.js';
 import { state, esc, pkgJson } from './state.js';
-import { SHEETS_ID } from './config.js';
 
   function fileIcon(mimeType) {
     if (mimeType === 'application/vnd.google-apps.folder')      return { icon: '📁', label: 'Folder',       color: '#c9a84c' };
@@ -287,7 +286,7 @@ import { SHEETS_ID } from './config.js';
 
     // ── Default: common sheet view — iframe embed ──
     // Append search query as a hash to scroll to matching tab if sheet has named tabs
-    const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${SHEETS_ID}/htmlview?embedded=true&rm=minimal`;
+    const sheetEmbedUrl = `https://docs.google.com/spreadsheets/d/${state.sheetsId}/htmlview?embedded=true&rm=minimal`;
 
     return `
     <main style="width:100%;padding:20px 20px 12px;height:calc(100vh - var(--rayna-header-h, 58px));box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;">
