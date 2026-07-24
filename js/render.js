@@ -100,6 +100,25 @@ function getView() {
               </div>
             ` : ''}
 
+            <!-- Search box — agent's private folder search, only visible when signed in on the hotels view -->
+            ${state.activeView === 'hotels' && state.agentUnlocked ? `
+              <div style="position:relative;flex:1;max-width:300px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(10,22,40,0.4)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  type="text"
+                  id="folder-search"
+                  placeholder="Search this folder..."
+                  value="${esc(state.folderSearch)}"
+                  oninput="dispatch('FOLDER_SEARCH', this.value)"
+                  style="width:100%;background:var(--cream);border:1px solid #ede9e1;border-radius:20px;padding:6px 12px 6px 32px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--navy);outline:none;transition:all 0.2s;"
+                  onfocus="this.style.borderColor='var(--gold)';"
+                  onblur="this.style.borderColor='#ede9e1';"
+                />
+              </div>
+            ` : ''}
+
           </div>
         ` : state.view === 'admin' ? `
           <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;flex-wrap:wrap;padding:8px 0;">
