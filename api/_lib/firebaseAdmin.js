@@ -57,6 +57,10 @@ export function agentsCollection(db) {
   return db.collection('artifacts').doc(APP_ID).collection('public').doc('data').collection('agents');
 }
 
+export function packagesCollection(db) {
+  return db.collection('artifacts').doc(APP_ID).collection('public').doc('data').collection('packages');
+}
+
 export function logsCollection(db) {
   return db.collection('artifacts').doc(APP_ID).collection('public').doc('data').collection('agent_login_logs');
 }
@@ -68,4 +72,3 @@ export async function getFieldValue() {
 }
 
 export { APP_ID };
-
