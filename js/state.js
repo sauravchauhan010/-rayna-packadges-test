@@ -3,6 +3,8 @@
 // read/write `state.someField` and call render() to reflect the change —
 // same model as the original single-file version, just split across modules.
 
+import { SHEETS_ID } from './config.js';
+
 export const state = {
   view: 'customer',
   // Real value comes from an async /api/session-check call (see main.js) —
@@ -29,6 +31,19 @@ export const state = {
   activeView: sessionStorage.getItem('rayna_view') || 'packages',   // 'packages' | 'hotels'
   folderSearch: '',
   hotelSearch: '',
+
+  // Common sheet ID — starts as the hardcoded fallback, overwritten once
+  // /api/config responds (lets it be set per-deployment via a Vercel env
+  // var instead of a code edit; see main.js and api/config.js).
+  sheetsId: SHEETS_ID,
+
+  // Cached common-sheet data (fetched lazily on first search) used to
+  // power real row matching above the embedded sheet iframe.
+  hotelSheetCols: [],
+  hotelSheetRows: [],
+  hotelSheetDataLoading: false,
+  hotelSheetDataLoaded: false,
+  hotelSheetDataError: '',
 
   // Agent (agent code + password) login — checked server-side against
   // hashed passwords; the browser never holds the agents list at all.
