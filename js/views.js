@@ -217,13 +217,6 @@ import { SHEETS_ID } from './config.js';
       const toolbarBar = showToolbar ? `
         <div style="padding:12px 18px;background:var(--slate-soft);border-bottom:1px solid #ede9e1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
           <span style="font-size:11px;font-weight:600;color:#666;">${state.folderSheets.length} item${state.folderSheets.length === 1 ? '' : 's'}</span>
-          <div style="position:relative;flex:1;max-width:260px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input id="folder-search" type="text" placeholder="Search this folder..." value="${esc(state.folderSearch)}"
-              oninput="dispatch('FOLDER_SEARCH', this.value)"
-              style="width:100%;font-family:'DM Sans',sans-serif;font-size:11px;padding:5px 8px 5px 26px;border:1px solid #ddd8ce;border-radius:6px;outline:none;color:var(--navy);background:#fff;"
-              onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='#ddd8ce'"/>
-          </div>
           <button onclick="refreshFolderSheets()" style="font-size:10px;font-weight:600;color:var(--gold);background:none;border:none;cursor:pointer;letter-spacing:0.05em;text-transform:uppercase;flex-shrink:0;">↻ Refresh</button>
         </div>
       ` : '';
