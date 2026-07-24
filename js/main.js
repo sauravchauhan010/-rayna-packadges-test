@@ -66,13 +66,27 @@ async function checkAgentSession() {
   state.agentSessionChecked = true;
 }
 
+// Sheets ID can be set per-deployment via a Vercel env var (see
+// api/config.js) instead of a code edit. state.sheetsId already starts
+// with the hardcoded fallback from config.js, so if this fails or is slow,
+// the app just keeps using that — never blocks or breaks anything.
+async function fetchSheetsConfig() {
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    if (data.sheetsId) state.sheetsId = data.sheetsId;
+  } catch (err) {
+    // no-op — keeps the hardcoded fallback already in state.sheetsId
+  }
+}
+
 window.onload = async () => {
   // initAuth (Firebase sign-in) and the two session checks are independent
   // of each other — run them in parallel instead of one after another to
   // shave a full network round-trip off the initial load.
   const authThenListeners = initAuth(state).then(() => setupListeners());
 
-  await Promise.all([authThenListeners, checkAdminSession(), checkAgentSession()]);
+  await Promise.all([authThenListeners, checkAdminSession(), checkAgentSession(), fetchSheetsConfig()]);
 
   if (state.agentUnlocked) {
     fetchFolderSheets();
