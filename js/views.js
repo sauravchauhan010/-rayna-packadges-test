@@ -269,9 +269,10 @@ import { SHEETS_ID } from './config.js';
         -->
         <div style="position:sticky;position:-webkit-sticky;top:var(--rayna-header-h, 58px);z-index:40;background:var(--cream, #faf8f4);padding-top:32px;margin:0 -20px;padding-left:20px;padding-right:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:nowrap;gap:10px;">
-            <div style="min-width:0;">
-              <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;white-space:nowrap;">Private Files</h2>
-              <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;">Your exclusive access folder.</p>
+            <div style="display:flex;align-items:baseline;gap:10px;min-width:0;overflow:hidden;">
+              <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin:0;white-space:nowrap;flex-shrink:0;">Private Files</h2>
+              <span style="color:#ccc;flex-shrink:0;">•</span>
+              <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Your exclusive access folder.</p>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
               <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:4px 12px;border-radius:20px;white-space:nowrap;">🔓 ${esc(state.agentCompanyName || state.agentUnlocked)}</span>
@@ -298,11 +299,12 @@ import { SHEETS_ID } from './config.js';
     return `
     <main style="width:100%;padding:20px 20px 12px;height:calc(100vh - var(--rayna-header-h, 58px));box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;">
 
-      <!-- Header row: title + promo + Agent Login, kept on one line -->
+      <!-- Header row: title + promo + Agent Login, all kept on one line -->
       <div style="flex-shrink:0;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:12px;">
-        <div style="min-width:0;">
-          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin:0 0 4px;white-space:nowrap;">Hotel Directory</h2>
-          <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;">Curated hotel options — live from our database.</p>
+        <div style="display:flex;align-items:baseline;gap:10px;min-width:0;overflow:hidden;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin:0;white-space:nowrap;flex-shrink:0;">Hotel Directory</h2>
+          <span style="color:#ccc;flex-shrink:0;">•</span>
+          <p style="font-size:12px;color:#888;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Curated hotel options — live from our database.</p>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
 
