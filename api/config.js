@@ -21,10 +21,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Fine to cache briefly at the edge — this practically never changes
-  // mid-session, and it saves a round trip to this function on repeat visits.
-  res.setHeader('Cache-Control', 'public, max-age=300');
-
   return res.status(200).json({
     sheetsId: process.env.SHEETS_ID || DEFAULT_SHEETS_ID
   });
