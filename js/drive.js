@@ -120,7 +120,7 @@ window.closePreview = () => {
 };
 
 window.redirectToWhatsApp = (pkg) => {
-  const phoneNumber = "971556232958";
+  const phoneNumber = "97142087557";
   const textMessage = `Hello, I'm interested in booking the following Premium Departure package:
 
 📍 Destination: ${pkg.title}
