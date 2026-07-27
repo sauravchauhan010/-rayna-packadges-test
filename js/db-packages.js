@@ -22,10 +22,14 @@ export function attachPackagesListener(onFallback) {
   onSnapshot(pkgsCol, (snap) => {
     const list = [];
     snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-    list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    list.sort((a, b) => {
+      const recDiff = (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0);
+      if (recDiff !== 0) return recDiff;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
     state.packages = list;
     state.isDbLoading = false;
-    render();
+    if (state.initialRenderDone) render();
   }, err => {
     console.error('Packages listener error:', err);
     onFallback();
@@ -45,7 +49,7 @@ export async function deletePackage(id) {
   }
   if (state.editingId === id) {
     state.editingId = null;
-    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '', recommended: false };
   }
 }
 
@@ -53,7 +57,7 @@ window.handleStartEdit = (id) => {
   const pkg = state.packages.find(p => p.id === id);
   if (!pkg) return;
   state.editingId = id;
-  state.draft = { title: pkg.title, duration: pkg.duration, highlight: pkg.highlight, image: pkg.image || '', pdfUrl: pkg.pdfUrl };
+  state.draft = { title: pkg.title, duration: pkg.duration, highlight: pkg.highlight, image: pkg.image || '', pdfUrl: pkg.pdfUrl, recommended: !!pkg.recommended };
   state.formError = '';
   state.formSuccess = '';
   render();
@@ -62,7 +66,7 @@ window.handleStartEdit = (id) => {
 
 window.handleCancelEdit = () => {
   state.editingId = null;
-  state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+  state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '', recommended: false };
   state.formError = '';
   state.formSuccess = '';
   render();
@@ -78,6 +82,7 @@ window.handlePackageSubmit = async (e) => {
   const highlight = document.getElementById('f-highlight')?.value?.trim();
   const image     = document.getElementById('f-image')?.value?.trim();
   const pdfUrl    = document.getElementById('f-pdf')?.value?.trim();
+  const recommended = !!document.getElementById('f-recommended')?.checked;
 
   if (!title || !duration || !pdfUrl) {
     state.formError = 'Country title, duration, and PDF link are required.';
@@ -95,6 +100,7 @@ window.handlePackageSubmit = async (e) => {
     highlight: highlight || '',
     image: image || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
     pdfUrl,
+    recommended,
     createdAt: new Date().toISOString()
   };
 
@@ -106,7 +112,7 @@ window.handlePackageSubmit = async (e) => {
     }
     saveLocal('rayna_pkgs_v4', state.packages);
     state.editingId = null;
-    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '', recommended: false };
     state.formSuccess = 'Package saved.';
     render(); return;
   }
@@ -132,7 +138,7 @@ window.handlePackageSubmit = async (e) => {
       state.formSuccess = 'Package published successfully.';
     }
     state.editingId = null;
-    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '' };
+    state.draft = { title: '', duration: '', highlight: '', image: '', pdfUrl: '', recommended: false };
   } catch (err) {
     state.formError = err.message;
   }
