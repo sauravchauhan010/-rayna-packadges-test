@@ -33,9 +33,9 @@ import { state, esc, pkgJson } from './state.js';
       <!-- Fluid Width Filter Bar -->
       <section style="padding:20px 20px 0;background:#fff;border-bottom:1px solid #ede9e1; width: 100%;">
         <div style="width:100%; padding: 0 10px;">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
             <span style="font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#888;">Filter by Destination</span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:center;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:flex-start;">
               ${destinations.map(country => {
                 const isSelected = state.selectedCountryFilter === country;
                 return `
