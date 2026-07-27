@@ -16,6 +16,42 @@ function getView() {
   return 'customer';
 }
 
+function packDestinationPills() {
+  const container = document.getElementById('destination-pills');
+  if (!container) return;
+
+  const gap = 8; // must match the CSS `gap` on #destination-pills
+  const containerWidth = container.clientWidth;
+  if (!containerWidth) return; // container hidden/not laid out yet — skip safely
+
+  const buttons = Array.from(container.children);
+  if (buttons.length < 2) return;
+
+  const [allBtn, ...pool] = buttons; // keep 'All' pinned first
+  pool.sort((a, b) => b.offsetWidth - a.offsetWidth); // largest first (first-fit-decreasing)
+
+  const rows = [[allBtn]];
+  const rowWidth = row => row.reduce((sum, b) => sum + b.offsetWidth, 0) + gap * (row.length - 1);
+
+  for (const btn of pool) {
+    let placed = false;
+    for (const row of rows) {
+      if (rowWidth(row) + gap + btn.offsetWidth <= containerWidth) {
+        row.push(btn);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) rows.push([btn]);
+  }
+
+  // Re-append in the new packed order — appendChild moves existing nodes
+  // (no re-creation), so click handlers and state are preserved untouched.
+  for (const row of rows) {
+    for (const btn of row) container.appendChild(btn);
+  }
+}
+
   export function render() {
     const container = document.getElementById('app');
     if (!container) return;
@@ -257,6 +293,16 @@ function getView() {
 
     html += renderPreviewModal();
     container.innerHTML = html;
+
+    // Pack the destination filter pills to remove trailing gaps: measure the
+    // REAL rendered width of each pill (character-count is not a reliable proxy
+    // for pixel width), then greedily fit them into rows (first-fit-decreasing,
+    // a standard bin-packing heuristic) so a short pill can drop into the
+    // leftover space at the end of a row instead of leaving it blank.
+    // 'All' is pinned as the first pill and excluded from reordering.
+    if (state.view === 'customer' && state.activeView === 'packages') {
+      packDestinationPills();
+    }
 
     // Keep --rayna-header-h in sync with the real height of the sticky top
     // nav (it can wrap to two rows on narrow screens), so any sticky
