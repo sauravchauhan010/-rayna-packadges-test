@@ -35,7 +35,7 @@ import { state, esc, pkgJson } from './state.js';
         <div style="width:100%; padding: 0 10px;">
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
             <span style="font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#888;">Filter by Destination</span>
-            <div style="display:flex;gap:8px;overflow-x:auto;width:100%;padding-bottom:16px;scrollbar-width:none;" class="justify-start md:justify-center no-scrollbar">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;justify-content:center;">
               ${destinations.map(country => {
                 const isSelected = state.selectedCountryFilter === country;
                 return `
