@@ -12,7 +12,13 @@ import { state, esc, pkgJson } from './state.js';
   }
 
   export function renderCustomer(filtered) {
-    const destinations = ['All', ...new Set(state.packages.map(p => p.title))];
+    // 'All' always stays first; the rest are sorted longest-to-shortest (a standard
+    // bin-packing heuristic) so that shorter pills naturally fall into the leftover
+    // space at the end of a wrapped row instead of leaving a visible gap there.
+    const destinations = [
+      'All',
+      ...[...new Set(state.packages.map(p => p.title))].sort((a, b) => b.length - a.length)
+    ];
 
     return `
     <main style="flex: 1; width: 100%; padding-bottom: 80px;">
@@ -31,7 +37,7 @@ import { state, esc, pkgJson } from './state.js';
       </div>
 
       <!-- Fluid Width Filter Bar -->
-      <section style="padding:20px 20px 0;background:#fff;border-bottom:1px solid #ede9e1; width: 100%;">
+      <section style="padding:20px 20px 20px;background:#fff;border-bottom:1px solid #ede9e1; width: 100%;">
         <div style="width:100%; padding: 0 10px;">
           <div style="display:flex;flex-direction:column;align-items:flex-start;gap:10px;">
             <span style="font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#888;">Filter by Destination</span>
