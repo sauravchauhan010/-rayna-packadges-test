@@ -91,11 +91,12 @@ import { state, esc, pkgJson } from './state.js';
           ` : `
             <!-- Optimized fluid Grid columns utilizing available horizontal spaces -->
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
-              ${filtered.map(pkg => `
+              ${filtered.map((pkg, index) => `
                 <div class="pkg-card" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ede9e1;display:flex;flex-direction:column;">
                   
                   <div class="img-wrap">
                     <img src="${esc(pkg.image)}" alt="${esc(pkg.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'" />
+                    <div style="position:absolute;top:8px;left:8px;background:rgba(10,22,40,0.85);backdrop-filter:blur(4px);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;padding:4px 9px;border-radius:20px;">${String(index + 1).padStart(2, '0')}</div>
                     ${pkg.highlight ? `<div class="highlight-strip">${esc(pkg.highlight)}</div>` : ''}
                   </div>
 
