@@ -47,7 +47,6 @@ import { state, esc, pkgJson } from './state.js';
                       font-size:11px;
                       font-weight:500;
                       letter-spacing:0.06em;
-                      text-transform:uppercase;
                       padding:6px 14px;
                       border-radius:6px;
                       cursor:pointer;
