@@ -48,7 +48,7 @@ import { state, esc, pkgJson } from './state.js';
                       font-weight:600;
                       letter-spacing:0.04em;
                       padding:6px 14px;
-                      border-radius:30px;
+                      border-radius:6px;
                       cursor:pointer;
                       transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
                       border:1px solid ${isSelected ? 'var(--gold)' : '#ede9e1'};
