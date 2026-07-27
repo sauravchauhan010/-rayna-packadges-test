@@ -97,4 +97,10 @@ window.onload = async () => {
   }
 
   render();
+  // Only after this first paint should later Firestore snapshots be allowed
+  // to trigger their own render() calls (see db-packages.js) — otherwise
+  // package updates land in state.packages but never repaint the screen
+  // until something unrelated (e.g. switching the Hotels/Packages toggle)
+  // happens to call render() next.
+  state.initialRenderDone = true;
 };
