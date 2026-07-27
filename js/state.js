@@ -10,6 +10,13 @@ export const state = {
   // Real value comes from an async /api/session-check call (see main.js) —
   // starts false so a spoofed sessionStorage flag can no longer fake it in.
   isLoggedIn: false,
+
+  // True only once the initial startup sequence in main.js (auth +
+  // admin/agent session checks) has completed at least once. Used to
+  // suppress premature renders from listeners that can fire before then
+  // (e.g. the packages Firestore listener), which would otherwise flash
+  // the "not logged in" default state before the real session state loads.
+  initialRenderDone: false,
   authChecked: false,
   user: null,
   packages: [],
@@ -22,7 +29,7 @@ export const state = {
   formError: '',
   formSuccess: '',
   editingId: null,
-  draft: { title: '', duration: '', highlight: '', image: '', pdfUrl: '' },
+  draft: { title: '', duration: '', highlight: '', image: '', pdfUrl: '', recommended: false },
 
   // Unified delete confirmation: { type: 'package' | 'agent', id } or null
   deleteTarget: null,
