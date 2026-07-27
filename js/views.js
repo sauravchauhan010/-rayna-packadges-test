@@ -97,6 +97,7 @@ import { state, esc, pkgJson } from './state.js';
                   <div class="img-wrap">
                     <img src="${esc(pkg.image)}" alt="${esc(pkg.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'" />
                     <div style="position:absolute;top:8px;left:8px;background:rgba(10,22,40,0.85);backdrop-filter:blur(4px);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.04em;padding:4px 9px;border-radius:20px;">${String(index + 1).padStart(2, '0')}</div>
+                    ${pkg.recommended ? `<div style="position:absolute;top:8px;right:8px;background:var(--gold);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:4px 9px;border-radius:20px;">★ Recommended</div>` : ''}
                     ${pkg.highlight ? `<div class="highlight-strip">${esc(pkg.highlight)}</div>` : ''}
                   </div>
 
@@ -442,6 +443,10 @@ import { state, esc, pkgJson } from './state.js';
               <label class="field-label" for="f-pdf">Itinerary Link (PDF) *</label>
               <input class="field" id="f-pdf" type="url" placeholder="https://..." value="${esc(state.draft.pdfUrl)}" required />
             </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;padding:2px 0;">
+              <input id="f-recommended" type="checkbox" ${state.draft.recommended ? 'checked' : ''} style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;" />
+              ★ Recommended — pins this to the front of the customer list
+            </label>
             <div style="display:flex;flex-direction:column;gap:6px;padding-top:2px;">
               <button type="submit" class="btn-gold" style="width:100%;justify-content:center;padding:9px;border-radius:4px;">
                 ${state.editingId ? 'Save Specs' : 'Publish Departure'}
@@ -497,7 +502,7 @@ import { state, esc, pkgJson } from './state.js';
                           <div style="display:flex;align-items:center;gap:10px;">
                             <img src="${esc(pkg.image)}" style="width:34px;height:34px;border-radius:4px;object-fit:cover;background:#e8e4dc;flex-shrink:0;" onerror="this.style.background='#e8e4dc';this.style.visibility='hidden'" />
                             <div>
-                              <div style="font-weight:600;font-size:12px;color:var(--navy);">${esc(pkg.title)}</div>
+                              <div style="font-weight:600;font-size:12px;color:var(--navy);display:flex;align-items:center;gap:5px;">${pkg.recommended ? '<span style="color:var(--gold);" title="Recommended">★</span>' : ''}${esc(pkg.title)}</div>
                               <a href="${esc(pkg.pdfUrl)}" target="_blank" style="font-size:10px;color:var(--gold);text-decoration:none;font-weight:500;">Itinerary Link ↗</a>
                             </div>
                           </div>
