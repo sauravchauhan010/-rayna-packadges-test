@@ -24,7 +24,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'POST') {
-      const { title, duration, highlight, image, pdfUrl } = req.body || {};
+      const { title, duration, highlight, image, pdfUrl, recommended } = req.body || {};
       if (!title || !duration || !pdfUrl) {
         return res.status(400).json({ error: 'Country title, duration, and PDF link are required.' });
       }
@@ -35,13 +35,14 @@ export default async function handler(req, res) {
         highlight: highlight || '',
         image: image || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
         pdfUrl,
+        recommended: !!recommended,
         createdAt: new Date().toISOString()
       });
       return res.status(200).json({ success: true, id: ref.id });
     }
 
     if (req.method === 'PUT') {
-      const { id, title, duration, highlight, image, pdfUrl } = req.body || {};
+      const { id, title, duration, highlight, image, pdfUrl, recommended } = req.body || {};
       if (!id || !title || !duration || !pdfUrl) {
         return res.status(400).json({ error: 'Id, country title, duration, and PDF link are required.' });
       }
@@ -51,7 +52,8 @@ export default async function handler(req, res) {
         duration: duration.trim(),
         highlight: highlight || '',
         image: image || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80',
-        pdfUrl
+        pdfUrl,
+        recommended: !!recommended
       });
       return res.status(200).json({ success: true });
     }
