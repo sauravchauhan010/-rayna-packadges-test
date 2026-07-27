@@ -205,7 +205,7 @@
       color: var(--gold);
       font-family: 'DM Sans', sans-serif;
       font-size: 9px; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase;
+      letter-spacing: 0.08em;
       padding: 4px 10px; border-radius: 4px;
     }
 
