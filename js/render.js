@@ -235,8 +235,8 @@ function packDestinationPills() {
               ← Client Portal
             </button>
           ` : ''}
-          ${state.view === 'customer' && !state.isLoggedIn ? `
-            <a href="?admin" style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(10,22,40,0.5);text-decoration:none;" title="Admin Login" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='rgba(10,22,40,0.5)'">Admin Access</a>
+          ${state.view === 'customer' ? `
+            <a href="?admin" style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(10,22,40,0.5);text-decoration:none;" title="${state.isLoggedIn ? 'Admin Panel' : 'Admin Login'}" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='rgba(10,22,40,0.5)'">${state.isLoggedIn ? 'Admin Panel' : 'Admin Access'}</a>
           ` : ''}
         </div>
       </div>
