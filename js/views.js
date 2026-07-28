@@ -15,7 +15,7 @@ import { state, esc, pkgJson } from './state.js';
     const destinations = ['All', ...new Set(state.packages.map(p => p.title))];
 
     return `
-    <main style="flex: 1; width: 100%; padding-bottom: 80px;">
+    <main class="view-fade" style="flex: 1; width: 100%; padding-bottom: 80px;">
       <div class="hero-bg" style="position:relative;padding:48px 20px;text-align:center;">
         <div style="max-width:680px;margin:0 auto;position:relative;z-index:2;">
           <div style="display:inline-block;border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:12px;">
@@ -79,9 +79,18 @@ import { state, esc, pkgJson } from './state.js';
           </div>
 
           ${state.isDbLoading ? `
-            <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px solid #ede9e1; width:100%;">
-              <div class="spinner" style="margin:0 auto 12px;"></div>
-              <p style="font-size:12px;color:#888;font-weight:500;">Retrieving schedules...</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
+              ${Array.from({ length: 8 }).map(() => `
+                <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ede9e1;">
+                  <div class="skeleton" style="height:160px;border-radius:0;"></div>
+                  <div style="padding:16px;">
+                    <div class="skeleton" style="height:16px;width:70%;margin-bottom:10px;"></div>
+                    <div class="skeleton" style="height:10px;width:40%;margin-bottom:20px;"></div>
+                    <div class="skeleton" style="height:32px;width:100%;margin-bottom:8px;"></div>
+                    <div class="skeleton" style="height:32px;width:100%;"></div>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           ` : filtered.length === 0 ? `
             <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px dashed #d5d0c8; width:100%;">
@@ -92,7 +101,7 @@ import { state, esc, pkgJson } from './state.js';
             <!-- Optimized fluid Grid columns utilizing available horizontal spaces -->
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
               ${filtered.map((pkg, index) => `
-                <div class="pkg-card" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ede9e1;display:flex;flex-direction:column;">
+                <div class="pkg-card fade-in" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ede9e1;display:flex;flex-direction:column;animation-delay:${Math.min(index, 12) * 40}ms;">
                   
                   <div class="img-wrap">
                     <img src="${esc(pkg.image)}" alt="${esc(pkg.title)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=80'" />
@@ -254,7 +263,7 @@ import { state, esc, pkgJson } from './state.js';
       const sheetTable = ''; // handled by modal
 
       return `
-      <main style="flex:1;width:100%;padding:0 20px 80px;">
+      <main class="view-fade" style="flex:1;width:100%;padding:0 20px 80px;">
         <!--
           Sticky sub-header: title row + breadcrumb + search/refresh toolbar.
           Pinned just below the site's own sticky top nav (offset read from
