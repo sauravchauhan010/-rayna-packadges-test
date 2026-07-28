@@ -2,13 +2,24 @@ import { isFirebaseReady, db } from './firebase.js';
 import { state, esc, pkgJson } from './state.js';
 
   function fileIcon(mimeType) {
-    if (mimeType === 'application/vnd.google-apps.folder')      return { icon: '📁', label: 'Folder',       color: '#c9a84c' };
-    if (mimeType === 'application/vnd.google-apps.spreadsheet') return { icon: '🟢', label: 'Google Sheet', color: '#16a34a' };
-    if (mimeType === 'application/pdf')                          return { icon: '📄', label: 'PDF',          color: '#dc2626' };
-    if (mimeType.includes('spreadsheetml') || mimeType.includes('excel')) return { icon: '📊', label: 'Excel', color: '#15803d' };
-    if (mimeType === 'application/vnd.google-apps.document')    return { icon: '📝', label: 'Doc',          color: '#2563eb' };
-    if (mimeType.includes('presentation'))                       return { icon: '📑', label: 'Slides',       color: '#d97706' };
-    return { icon: '📄', label: 'File', color: '#6b7280' };
+    const doc = (color, label, tab) => ({
+      label,
+      color,
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 2h9l5 5v15a1 1 0 01-1 1H6a1 1 0 01-1-1V3a1 1 0 011-1z" fill="${color}"/><path d="M15 2v5h5" fill="#fff" opacity="0.35"/>${tab ? `<rect x="4" y="14" width="16" height="6" rx="1.5" fill="#fff"/><text x="12" y="18.5" text-anchor="middle" font-size="6" font-weight="700" fill="${color}" font-family="Arial,sans-serif">${tab}</text>` : ''}</svg>`
+    });
+    const folder = () => ({
+      label: 'Folder',
+      color: '#c9a84c',
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6a1 1 0 011-1h5l2 2h9a1 1 0 011 1v11a1 1 0 01-1 1H4a1 1 0 01-1-1V6z" fill="#c9a84c"/></svg>`
+    });
+    if (mimeType === 'application/vnd.google-apps.folder')      return folder();
+    if (mimeType === 'application/vnd.google-apps.spreadsheet') return doc('#16a34a', 'Google Sheet', 'XLS');
+    if (mimeType === 'application/pdf')                          return doc('#dc2626', 'PDF', 'PDF');
+    if (mimeType.includes('spreadsheetml') || mimeType.includes('excel')) return doc('#15803d', 'Excel', 'XLS');
+    if (mimeType === 'application/vnd.google-apps.document')    return doc('#2563eb', 'Doc', 'DOC');
+    if (mimeType.includes('wordprocessingml') || mimeType.includes('msword')) return doc('#2563eb', 'Word', 'DOC');
+    if (mimeType.includes('presentation'))                       return doc('#d97706', 'Slides', 'PPT');
+    return doc('#6b7280', 'File', '');
   }
 
   export function renderCustomer(filtered) {
