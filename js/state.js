@@ -7,6 +7,15 @@ import { SHEETS_ID } from './config.js';
 
 export const state = {
   view: 'customer',
+
+  // Transient (not persisted) render-tracking flags — used only to decide
+  // whether the current render() pass should replay entrance animations
+  // (view fade-in, card stagger) or skip them. Without this, every re-render
+  // (typing in search, a Firestore update in the background, etc.) would
+  // restart the animations from opacity:0, causing a visible flicker/blink.
+  __lastViewKey: null,
+  __packagesRevealed: false,
+
   // Real value comes from an async /api/session-check call (see main.js) —
   // starts false so a spoofed sessionStorage flag can no longer fake it in.
   isLoggedIn: false,
