@@ -9,7 +9,11 @@ import { attachPackagesListener, loadLocalPackages } from './db-packages.js';
 // confirmed. Packages are public marketing content, so they still load
 // straight from Firestore on the client — nothing sensitive there.
 
-export function loadLocalFallback() {
+// reason: 'not-configured' | 'timeout' | 'error' — recorded on state so the
+// UI can show an honest, specific connection-status message instead of
+// silently rendering local data as if nothing were wrong.
+export function loadLocalFallback(reason = 'error') {
+  state.offlineReason = reason;
   loadLocalPackages();
   state.isDbLoading = false;
   render();
@@ -17,27 +21,28 @@ export function loadLocalFallback() {
 
 export function setupListeners() {
   if (!isFirebaseReady || !db) {
-    loadLocalFallback();
+    loadLocalFallback('not-configured');
     return;
   }
 
   onAuthStateChanged(auth, (usr) => {
     state.user = usr;
     if (!usr) {
-      if (state.isDbLoading) loadLocalFallback();
+      if (state.isDbLoading) loadLocalFallback('error');
       return;
     }
-    attachPackagesListener(loadLocalFallback);
+    attachPackagesListener(() => loadLocalFallback('error'));
   });
 }
 
 // Watchdog: if Firestore hasn't responded in time, fall back to local storage
-// so the app is never stuck on a spinner.
+// so the app is never stuck on a spinner. Timeout bumped from 3s to 5.5s to
+// give slower connections a fair chance before assuming a real problem.
 export function startLoadWatchdog() {
   setTimeout(() => {
     if (state.isDbLoading) {
       console.warn('Database connection timed out. Booting local offline sandbox.');
-      loadLocalFallback();
+      loadLocalFallback('timeout');
     }
-  }, 3000);
+  }, 5500);
 }
