@@ -30,6 +30,14 @@ export const state = {
   user: null,
   packages: [],
   isDbLoading: true,
+
+  // Why the app is in local-fallback mode, if it is. null = connected to
+  // Firestore normally (or hasn't finished checking yet). One of:
+  // 'not-configured' (Firebase never initialized), 'timeout' (Firestore
+  // didn't respond in time), 'error' (listener/auth error). Used to show
+  // an honest connection-status message instead of pretending everything
+  // is fine — see renderCustomer/renderAdmin in views.js.
+  offlineReason: null,
   searchQuery: '',
   adminSearchQuery: '',
   selectedCountryFilter: 'All',
