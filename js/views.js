@@ -89,6 +89,16 @@ import { state, esc, pkgJson } from './state.js';
             </span>
           </div>
 
+          ${!state.isDbLoading && state.offlineReason ? `
+            <div style="display:flex;align-items:center;gap:8px;background:#fff8ec;border:1px solid #f0e2bd;border-radius:6px;padding:10px 14px;margin-bottom:20px;">
+              <span style="font-size:12px;color:#a3781c;">
+                ${state.offlineReason === 'not-configured'
+                  ? "We're having trouble loading live packages right now. Please check back shortly."
+                  : "Loading is taking longer than usual — showing the latest data we have available."}
+              </span>
+            </div>
+          ` : ''}
+
           ${state.isDbLoading ? `
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
               ${Array.from({ length: 8 }).map(() => `
@@ -103,12 +113,17 @@ import { state, esc, pkgJson } from './state.js';
                 </div>
               `).join('')}
             </div>
-          ` : filtered.length === 0 ? `
+          ` : filtered.length === 0 ? (
+            state.packages.length === 0 ? `
+            <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px dashed #d5d0c8; width:100%;">
+              <p style="font-size:14px;color:#888;">No departures published yet. Please check back soon.</p>
+            </div>
+          ` : `
             <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:8px;border:1px dashed #d5d0c8; width:100%;">
               <p style="font-size:14px;color:#888;">No group departures match your current filters.</p>
               <button onclick="dispatch('SET_COUNTRY_FILTER', 'All'); dispatch('SEARCH', '')" style="margin-top:10px;font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;font-weight:600;text-decoration:underline;">Reset all filters</button>
             </div>
-          ` : `
+          `) : `
             <!-- Optimized fluid Grid columns utilizing available horizontal spaces -->
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding-bottom:20px; width:100%;">
               ${filtered.map((pkg, index) => `
@@ -383,7 +398,13 @@ import { state, esc, pkgJson } from './state.js';
   }
 
   export function renderAdmin() {
-    const isCloud = !!(isFirebaseReady && db);
+    const isCloud = !!(isFirebaseReady && db) && !state.offlineReason;
+
+    const offlineReasonLabel = {
+      'not-configured': 'Firebase not configured — check Vercel env vars',
+      'timeout': 'Connection timed out — showing local data',
+      'error': 'Connection error — showing local data',
+    }[state.offlineReason] || 'Local storage fallback active';
 
     const adminBarAndNav = `
       <div class="admin-bar">
@@ -394,7 +415,7 @@ import { state, esc, pkgJson } from './state.js';
           <div>
             <div style="font-weight:600;font-size:13px;">Admin Dashboard</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:1px;">
-              ${isCloud ? 'Live cloud synchronizing' : 'Local storage fallback active'}
+              ${isCloud ? 'Live cloud synchronizing' : offlineReasonLabel}
             </div>
           </div>
         </div>
