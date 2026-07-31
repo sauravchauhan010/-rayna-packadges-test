@@ -1,17 +1,20 @@
 import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { db, isFirebaseReady } from './firebase.js';
-import { APP_ID, SEED_PACKAGES } from './config.js';
+import { APP_ID } from './config.js';
 import { state, saveLocal } from './state.js';
 import { render } from './render.js';
 
+// Loads whatever real packages an admin has previously saved locally (from
+// prior offline-mode edits). No fake seed/demo data — if nothing has ever
+// been saved locally, this is a genuinely empty catalog, and the UI is
+// responsible for saying so honestly rather than showing placeholder cards.
 export function loadLocalPackages() {
   try {
     const localPkgs = localStorage.getItem('rayna_pkgs_v4');
-    state.packages = localPkgs ? JSON.parse(localPkgs) : [...SEED_PACKAGES];
-    if (!localPkgs) localStorage.setItem('rayna_pkgs_v4', JSON.stringify(state.packages));
+    state.packages = localPkgs ? JSON.parse(localPkgs) : [];
   } catch (_) {
-    state.packages = [...SEED_PACKAGES];
+    state.packages = [];
   }
 }
 
@@ -29,6 +32,7 @@ export function attachPackagesListener(onFallback) {
     });
     state.packages = list;
     state.isDbLoading = false;
+    state.offlineReason = null;
     if (state.initialRenderDone) render();
   }, err => {
     console.error('Packages listener error:', err);
